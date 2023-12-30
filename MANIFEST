@@ -1,0 +1,8 @@
+MANIFEST
+Changes
+Makefile.PL
+JS.pm
+JS.pod
+JS.xs
+t/basic.t
+t/arith.t
