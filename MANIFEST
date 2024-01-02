@@ -4,5 +4,6 @@ Makefile.PL
 JS.pm
 JS.pod
 JS.xs
-t/basic.t
 t/arith.t
+t/basic.t
+t/stringify.t
