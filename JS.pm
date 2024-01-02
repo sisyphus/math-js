@@ -51,6 +51,7 @@ use overload
 '&'    => \&oload_and,
 '|'    => \&oload_ior,
 '^'    => \&oload_xor,
+'~'    => \&oload_not,
 '<<'   => \&oload_lshift,
 '>>'   => \&oload_rshift,
 ;
@@ -309,6 +310,22 @@ sub oload_xor {
 
   $retval = ($_[0]->{val} & 0xffffffff) ^ ($_[1] & 0xffffffff);
   return Math::JS->new(unpack 'l', pack 'L', $retval);
+}
+
+########### ~ ##########
+sub oload_not {
+  die "Wrong number of arguments given to oload_ior()"
+    if @_ > 3;
+
+  die "'~' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($_[0]->{type} =~ /int32/);
+
+  my $val = $_[0]->{val};
+
+  return Math::JS->new( MAX_ULONG - $val )
+    if($val > MAX_SLONG);
+
+  return Math::JS->new( -$val - 1);
 }
 
 ########### ++ ##########
