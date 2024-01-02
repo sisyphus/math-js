@@ -4,6 +4,35 @@ use strict;
 use warnings;
 use Config;
 
+BEGIN {
+  eval{require Math::MPFR;};
+  unless($@) {
+    if($Config{nvsize} != 8) {
+      $Math::JS::USE_NVTOA = 0;
+      if($Math::MPFR::VERSION >= 4.17) {
+        $Math::JS::USE_MPFRTOA = 1;
+      }
+      else {
+        $Math::JS::USE_MPFRTOA = 0;
+      }
+    }
+    else { # $config{nvsize} == 8 (double)
+      if($Math::MPFR::VERSION >= 4.05) {
+        $Math::JS::USE_NVTOA = 1;
+        $Math::JS::USE_MPFRTOA = 0;
+      }
+      else {
+        $Math::JS::USE_NVTOA = 0;
+        $Math::JS::USE_MPFRTOA = 0;
+      }
+    }
+  }
+  else { # Math::MPFR not available
+    $Math::JS::USE_NVTOA = 0;
+    $Math::JS::USE_MPFRTOA = 0;
+  }
+}; # close BEGIN{}
+
 use overload
 '+'    => \&oload_add,
 '-'    => \&oload_sub,
@@ -34,6 +63,8 @@ use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
 use constant IVSIZE    => $Config{ivsize};
 use constant NVSIZE    => $Config{nvsize};
+use constant USE_NVTOA => $Math::JS::USE_NVTOA;
+use constant USE_MPFRTOA => $Math::JS::USE_MPFRTOA;
 
 our $VERSION = '0.01';
 
@@ -52,6 +83,10 @@ sub new {
     # return a copy of the given Math::JS object
     my $ret = shift;
     return $ret;
+  }
+
+  if(NVSIZE != 8) {
+    $val = unpack('d', pack 'd', $val) if $ok == 4;
   }
 
   my %h = ('val' => $val, 'type' => _classify($val, $ok));
@@ -208,12 +243,18 @@ sub oload_and {
   die "Wrong number of arguments given to oload_and()"
     if @_ > 3;
 
+  die "'&' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($_[0]->{type} =~ /int32/);
+
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_and" unless $ok;
+  die "Bad argument given to oload_and" unless ($ok && $ok < 4);
+
 
   my $retval;
 
   if($ok == 1) {
+    die "'&' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) & ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -227,12 +268,17 @@ sub oload_ior {
   die "Wrong number of arguments given to oload_ior()"
     if @_ > 3;
 
+  die "'|' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($_[0]->{type} =~ /int32/);
+
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_ior" unless $ok;
+  die "Bad argument given to oload_ior" unless ($ok && $ok < 4);
 
   my $retval;
 
   if($ok == 1) {
+    die "'|' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) | ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -246,12 +292,17 @@ sub oload_xor {
   die "Wrong number of arguments given to oload_xor()"
     if @_ > 3;
 
+  die "'^' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($_[0]->{type} =~ /int32/);
+
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_xor" unless $ok;
+  die "Bad argument given to oload_xor" unless ($ok && $ok < 4);
 
   my $retval;
 
   if($ok == 1) {
+    die "'^' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
+      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) ^ ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -279,7 +330,17 @@ sub oload_stringify {
   my $ret;
   if    ($self->{type} eq 'sint32') { $ret = unpack("l", pack("L", $self->{val})) }
   elsif ($self->{type} eq 'uint32') { $ret = unpack("L", pack("L", $self->{val})) }
-  else                              { $ret = sprintf "%.17g", $self->{val} }
+  else {
+    if(USE_NVTOA)      { $ret = Math::MPFR::nvtoa  (Math::MPFR->new($self->{val})) }
+    elsif(USE_MPFRTOA) {
+      #printf "VAL: %.17g\n", $self->{val};
+      #printf "TYPE: %s\n", $self->{type};
+      #print "1: ", Math::MPFR::mpfrtoa(Math::MPFR->new(sprintf "%.17g", $self->{val})), "\n";
+      #print "2: ", Math::MPFR::mpfrtoa(Math::MPFR->new($self->{val})), "\n";
+      $ret = Math::MPFR::mpfrtoa(Math::MPFR->new(sprintf "%.17g", $self->{val}));
+    }
+    else               { $ret = sprintf "%.17g", $self->{val} }
+ }
   return "$ret";
 }
 
@@ -376,6 +437,10 @@ sub oload_lshift {
 
   my $shift = $_[1] % 32;
   my $type  = $_[0]->{type};
+
+  die "left-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($type =~ /int32/);
+
   my $val   = $_[0]->{val};
 
   if($type eq 'sint32' && $val < 0) {
@@ -396,19 +461,11 @@ sub oload_rshift {
 
   my $shift = $_[1] % 32;
   my $type  = $_[0]->{type};
+
+  die "right-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
+    unless ($type =~ /int32/);
+
   my $val   = $_[0]->{val};
-
-  if($val < MIN_SLONG) {
-     return 0 if $val == -(MAX_ULONG + 1);
-     $val += MAX_NUM + 1;
-     return $val >> $shift if $val <= MAX_ULONG;
-  }
-
-  if($val > MAX_ULONG) {
-     $type = 'uint32';
-     $val -= MAX_NUM;
-     $val += MAX_ULONG;
-  }
 
   if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) {
     my $ior = 0xffffffff ^ ((1 << (32 - $shift)) - 1);
