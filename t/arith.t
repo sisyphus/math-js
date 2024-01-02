@@ -122,10 +122,34 @@ cmp_ok(Math::JS->new(4294967293) >> 1, '==', -2, '4294967293 >> 1 => -2');
 cmp_ok(Math::JS->new(4294967294) >> 1, '==', -1, '4294967294 >> 1 => -1');
 cmp_ok(Math::JS->new(4294967295) >> 1, '==', -1, '4294967295 >> 1 => -1');
 
+cmp_ok(~Math::JS->new(0), '==', -1, "~0 == -1");
+cmp_ok(~Math::JS->new(Math::JS::MAX_ULONG), '==', 0, "~MAX_ULONG == 0");
+cmp_ok(~Math::JS->new(Math::JS::MAX_SLONG), '==', -2147483648, "~MAX_SLONG == -2147483648");
+cmp_ok(~Math::JS->new(Math::JS::MIN_ULONG), '==', 2147483647, "~MIN_ULONG == 2147483647");
+cmp_ok(~Math::JS->new(Math::JS::MIN_SLONG), '==', 2147483647, "~MIN_SLONG == 2147483647");
+cmp_ok(~Math::JS->new(Math::JS::LOW_31BIT), '==', -1073741825, "~LOW_31BIT == -1073741825");
+cmp_ok(~Math::JS->new(1111111111), '==', -1111111112, "~1111111111 == -1111111112");
+
+cmp_ok(Math::JS->new(Math::JS::MAX_ULONG) ^ Math::JS->new(Math::JS::MIN_SLONG), '==', 2147483647, "4294967295 ^ -2147483648 == 2147483647");
+cmp_ok(Math::JS->new(Math::JS::MIN_SLONG) ^ Math::JS->new(Math::JS::MAX_ULONG), '==', 2147483647, "-2147483648 ^ 4294967295 == 2147483647");
+cmp_ok(Math::JS->new(4294967295) ^ Math::JS->new(100), '==', -101, "4294967295 ^ 100 == -101");
+
+cmp_ok(Math::JS->new(3294967295) ^ Math::JS->new(1000), '==', -999999977, "294967295 ^ 1000 == -999999977");
+cmp_ok(Math::JS->new(3294967295) ^ Math::JS->new(10000), '==', -1000008977, "3294967295 ^ 10000 == -1000008977");
+cmp_ok(Math::JS->new(94967295) ^ Math::JS->new(100000), '==', 94933855, "94967295 ^ 100000 == 94933855");
+cmp_ok(Math::JS->new(94967295) ^ Math::JS->new(-100000), '==', -94933857, "94967295 ^ -100000 == -94933857");
+cmp_ok(Math::JS->new(-94967295) ^ Math::JS->new(200000), '==', -95033535, "94967295 ^ 200000 == -95033535");
+cmp_ok(Math::JS->new(429496) ^ Math::JS->new(-100734), '==', -459974, "429496 ^ -100734 == -459974");
+
+
+
+
+
 done_testing();
 
 __END__
-
+#######################################################
+#######################################################
 # TODO
 The following tests should all pass when (if ever) Math::JS allows bit operations
 on values that are larger than 32 bit.
