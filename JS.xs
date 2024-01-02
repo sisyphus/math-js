@@ -4,6 +4,8 @@
 
 int is_ok(SV * in) {
 
+  if(!SvOK(in)) return 0;
+
   if( sv_isobject(in) ) {
     const char* h = HvNAME( SvSTASH(SvRV(in)) );
     if(strEQ(h, "Math::JS")) return 1;
@@ -31,7 +33,7 @@ int is_ok(SV * in) {
         return 3;
       }
 
-      if(iv < -2147483648) return 4;
+      if(iv < -2147483648LL) return 4;
       return 3;
     }
     if( SvNOK(in) ) return 4;
