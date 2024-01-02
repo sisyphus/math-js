@@ -2,11 +2,6 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
-#if($Config::Config{nvsize} > 8) {
-#  warn "Aborting because this module requires that perl's \$Config{nvsize} is 8\n";
-#  exit 0;
-#}
-
 my %options = %{
 {
   NAME => 'Math::JS',
