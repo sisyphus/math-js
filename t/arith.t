@@ -130,16 +130,31 @@ cmp_ok(~Math::JS->new(Math::JS::MIN_SLONG), '==', 2147483647, "~MIN_SLONG == 214
 cmp_ok(~Math::JS->new(Math::JS::LOW_31BIT), '==', -1073741825, "~LOW_31BIT == -1073741825");
 cmp_ok(~Math::JS->new(1111111111), '==', -1111111112, "~1111111111 == -1111111112");
 
-cmp_ok(Math::JS->new(Math::JS::MAX_ULONG) ^ Math::JS->new(Math::JS::MIN_SLONG), '==', 2147483647, "4294967295 ^ -2147483648 == 2147483647");
-cmp_ok(Math::JS->new(Math::JS::MIN_SLONG) ^ Math::JS->new(Math::JS::MAX_ULONG), '==', 2147483647, "-2147483648 ^ 4294967295 == 2147483647");
-cmp_ok(Math::JS->new(4294967295) ^ Math::JS->new(100), '==', -101, "4294967295 ^ 100 == -101");
+my $new = Math::JS->new(Math::JS::MAX_ULONG) ^ Math::JS->new(Math::JS::MIN_SLONG);
+cmp_ok($new, '==', 2147483647, "4294967295 ^ -2147483648 == 2147483647");
+cmp_ok($new->{type}, 'eq', 'sint32', "4294967295 ^ -2147483648 returns 'sint32'");
 
-cmp_ok(Math::JS->new(3294967295) ^ Math::JS->new(1000), '==', -999999977, "294967295 ^ 1000 == -999999977");
+$new = Math::JS->new(Math::JS::MIN_SLONG) ^ Math::JS->new(Math::JS::MAX_ULONG);
+cmp_ok($new, '==', 2147483647, "-2147483648 ^ 4294967295 == 2147483647");
+cmp_ok($new->{type}, 'eq', 'sint32', "-2147483648 ^ 4294967295 returns 'sint32'");
+
+$new = Math::JS->new(4294967295) ^ Math::JS->new(100);
+cmp_ok($new, '==', -101, "4294967295 ^ 100 == -101");
+cmp_ok($new->{type}, 'eq', 'sint32', "4294967295 ^ 100 returns 'sint32'");
+
+$new = Math::JS->new(3294967295) ^ Math::JS->new(1000);
+cmp_ok($new,  '==', -999999977, "294967295 ^ 1000 == -999999977");
+cmp_ok($new->{type}, 'eq', 'sint32', "294967295 ^ 1000 returns 'sint32'");
+my $n2 = $new << 1;
+cmp_ok($n2, '==', -1999999954, "-999999977 << 1 => -1999999954");
+my $n3 = $new >> 1;
+cmp_ok($n3, '==', -499999989, "-999999977 >> 1 => -499999989");
+
 cmp_ok(Math::JS->new(3294967295) ^ Math::JS->new(10000), '==', -1000008977, "3294967295 ^ 10000 == -1000008977");
-cmp_ok(Math::JS->new(94967295) ^ Math::JS->new(100000), '==', 94933855, "94967295 ^ 100000 == 94933855");
+cmp_ok(Math::JS->new(94967295) ^ Math::JS->new(100000),  '==', 94933855, "94967295 ^ 100000 == 94933855");
 cmp_ok(Math::JS->new(94967295) ^ Math::JS->new(-100000), '==', -94933857, "94967295 ^ -100000 == -94933857");
 cmp_ok(Math::JS->new(-94967295) ^ Math::JS->new(200000), '==', -95033535, "94967295 ^ 200000 == -95033535");
-cmp_ok(Math::JS->new(429496) ^ Math::JS->new(-100734), '==', -459974, "429496 ^ -100734 == -459974");
+cmp_ok(Math::JS->new(429496) ^ Math::JS->new(-100734),   '==', -459974, "429496 ^ -100734 == -459974");
 
 
 
