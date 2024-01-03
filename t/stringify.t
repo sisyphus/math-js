@@ -5,7 +5,7 @@ use Test::More;
 
 warn "FYI: Overloading uses Math::MPFR::nvtoa\n" if Math::JS::USE_NVTOA;
 warn "FYI: Overloading uses Math::MPFR::mpfrtoa\n" if Math::JS::USE_MPFRTOA;
-warn "FYI: Overloading use ssprintf(\"%.17g\", val)\n" unless (Math::JS::USE_NVTOA || Math::JS::USE_MPFRTOA);
+warn "FYI: Overloading uses sprintf(\"%.17g\", val)\n" unless (Math::JS::USE_NVTOA || Math::JS::USE_MPFRTOA);
 
 for(1/10, 2 ** 0.5, 1.4 / 10, 1e+23, 2 ** -1074) {
   my $js = Math::JS->new($_);
