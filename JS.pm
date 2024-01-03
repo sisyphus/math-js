@@ -5,33 +5,46 @@ use warnings;
 use Config;
 
 BEGIN {
-  eval{require Math::MPFR;};
-  unless($@) {
-    if($Config{nvsize} != 8) {
-      $Math::JS::USE_NVTOA = 0;
-      if($Math::MPFR::VERSION >= 4.17) {
-        $Math::JS::USE_MPFRTOA = 1;
-      }
-      else {
-        $Math::JS::USE_MPFRTOA = 0;
-      }
-    }
-    else { # $config{nvsize} == 8 (double)
-      if($Math::MPFR::VERSION >= 4.05) {
-        $Math::JS::USE_NVTOA = 1;
-        $Math::JS::USE_MPFRTOA = 0;
-      }
-      else {
+
+  # By default, the '""' overloading (sub oload_stringify) will use
+  # Math::MPFR::nvtoa() or Math::MPFR::mpfrtoa() if available. This
+  # can be prevented by setting $ENV{NO_MPFR} to a true value - thus
+  # ensuring that oload_stringify() uses sprintf("%.17g",val).
+  # (This capability is useful for author testing.)
+
+  unless(defined $ENV{NO_MPFR}) {
+    eval{require Math::MPFR;};
+    unless($@) {
+      if($Config{nvsize} != 8) {
         $Math::JS::USE_NVTOA = 0;
-        $Math::JS::USE_MPFRTOA = 0;
+        if($Math::MPFR::VERSION >= 4.17) {
+          $Math::JS::USE_MPFRTOA = 1;
+        }
+        else {
+          $Math::JS::USE_MPFRTOA = 0;
+        }
+      }
+      else { # $config{nvsize} == 8 (double)
+        if($Math::MPFR::VERSION >= 4.05) {
+          $Math::JS::USE_NVTOA = 1;
+          $Math::JS::USE_MPFRTOA = 0;
+        }
+        else {
+          $Math::JS::USE_NVTOA = 0;
+          $Math::JS::USE_MPFRTOA = 0;
+        }
       }
     }
-  }
-  else { # Math::MPFR not available
+    else { # Math::MPFR not available
+      $Math::JS::USE_NVTOA = 0;
+      $Math::JS::USE_MPFRTOA = 0;
+    }
+  }  # close unless{} block
+  else {
     $Math::JS::USE_NVTOA = 0;
     $Math::JS::USE_MPFRTOA = 0;
   }
-}; # close BEGIN{}
+};   # close BEGIN{}  block
 
 use overload
 '+'    => \&oload_add,
