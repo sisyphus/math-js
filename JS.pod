@@ -61,12 +61,12 @@
   present inaccurate values, whereas JavaScript does not.)
 
   If your perl's $Config{nvsize} == 8 && you have Math::MPFR (version 4.05 or
-  later), then the Math::JS overloading of print() will present the same
-  value as JavaScript does.
+  later), then the Math::JS overloading of print() will (by default) present
+  the same value as JavaScript does.
 
   Else, if your perl's $Config{nvsize} != 8 && you have Math::MPFR (version
-  4.17 or later), then the Math::JS overloading of print() will present the
-  same value as JavaScript does .... except for subnormal values.
+  4.17 or later), then the Math::JS overloading of print() will (by default)
+  present the same value as JavaScript does .... except for subnormal values.
   (TODO: I intend to eventually fix that little shortcoming.)
   For subnormal values, the overloaded print() function might present more
   decimal mantissa digits than JavaScript does - though both forms will
@@ -76,6 +76,10 @@
   function, which might present more decimal mantissa digits than
   JavaScript does - though both forms will accurately represent exactly the
   same double-precision value.
+
+  NOTE:
+      The default behaviour of using Math::MPFR functionality (when
+      available) can be overridden by defining $ENV{NO_MPFR}
 
 =head1 LICENSE
 
