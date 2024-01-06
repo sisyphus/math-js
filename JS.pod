@@ -37,8 +37,8 @@
 
   No other functions are provided, except for the subs that are responsible
   for overloading the  '+', '-', '*', '/', '**', '++', '--', '>=', '<=',
-  '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '**=' and
-  perhaps other operations.
+  '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '**=', '&',
+  '|', '^', '~', '&=',  '|=', '^=' and perhaps other operations.
 
 =head1 ASSIGNING FLOATING POINT VALUES
 
