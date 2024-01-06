@@ -471,21 +471,25 @@ sub oload_lshift {
   die "left-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
     unless ($type =~ /int32/);
 
-  my $val   = $_[0]->{val};
+  my $val   = unpack 'L', pack 'L', $_[0]->{val};
 
-  if($type eq 'sint32' && $val < 0) {
-    $val *= -1;
-    $val <<= $shift;
-    return Math::JS->new(-$val);
-  }
-
-  my $ret = Math::JS->new(unpack 'l', pack 'l', (($_[0]->{val} & 0xffffffff) << $_[1]) );
+  my $ret = Math::JS->new(unpack 'l', pack 'l', (($_[0]->{val} & 0xffffffff) << $shift) );
   $ret->{type} = 'sint32';
   return $ret;
 }
 
 ########### >> ##########
 sub oload_rshift {
+
+  # From the javascript manual:
+  # <quote>
+  # Excess bits shifted off to the right are discarded, and copies of
+  # the leftmost bit are shifted in from the left. This operation is
+  # also called "sign-propagating right shift" or "arithmetic right
+  # shift", because the sign of the resulting number is the same as
+  # the sign of the first operand.
+  # </quote>
+
   die "Wrong number of arguments given to oload_rshift()"
     if @_ > 3;
 
