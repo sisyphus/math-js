@@ -4,11 +4,11 @@ use Math::JS;
 use Test::More;
 
 warn "FYI:\n";
-warn "constant USE_NVTOA:   ", Math::JS::USE_NVTOA, "\n";
-warn "constant USE_MPFRTOA: ", Math::JS::USE_MPFRTOA, "\n\n";
+warn "constant USE_NVTOA: ", Math::JS::USE_NVTOA, "\n";
+warn "constant USE_RYU  : ", Math::JS::USE_RYU,   "\n\n";
 
-if(Math::JS::USE_NVTOA == Math::JS::USE_MPFRTOA) {
-  cmp_ok(Math::JS::USE_NVTOA, '==', 0, "(USE_NVTOA && USE_MPFRTOA) is FALSE");
+if(Math::JS::USE_NVTOA == Math::JS::USE_RYU) {
+  cmp_ok(Math::JS::USE_NVTOA, '==', 0, "(USE_NVTOA && USE_RYU) is FALSE");
 }
 
 my ($new, $dummy);
@@ -20,21 +20,21 @@ like ($@, qr/^Bad argument \(or no argument\)/, 'undef is invalid arg');
 
 my $v = Math::JS->new(1 / 10);
 
-cmp_ok($v, '==', 0.1, "1/10 == 0.1") if(Math::JS::NVSIZE == 8);
+cmp_ok($v, '==', 0.1, "1/10 == 0.1");
 
-if(Math::JS::NVSIZE == 8 || Math::JS::USE_NVTOA || Math::JS::USE_MPFRTOA) {
+if(Math::JS::USE_NVTOA || Math::JS::USE_RYU) {
   cmp_ok("$v", '==', 1 / 10  , "1/10 eq 0.1");
 }
 # else skip
 
 $v = Math::JS->new(1.4 / 10);
-cmp_ok($v, '==', 0.13999999999999999, "1.4/10 == 0.13999999999999999") if(Math::JS::NVSIZE == 8);
-cmp_ok("$v", '==', 1.4 / 10, "1.4/10 eq 0.13999999999999999") if(Math::JS::NVSIZE == 8);
+cmp_ok($v, '==', 0.13999999999999999, "1.4/10 == 0.13999999999999999");
+cmp_ok("$v", '==', 1.4 / 10, "1.4/10 eq 0.13999999999999999");
 
 $v = Math::JS->new(2);
 my $n = $v ** 0.5;
-cmp_ok($n, '==', 1.4142135623730951E0, "2 ** 0.5 == 1.4142135623730951") if(Math::JS::NVSIZE == 8);
-cmp_ok("$n", '==', 2 ** 0.5, "2 ** 0.5 eq 1.4142135623730951") if(Math::JS::NVSIZE == 8);
+cmp_ok($n, '==', 1.4142135623730951E0, "2 ** 0.5 == 1.4142135623730951");
+cmp_ok("$n", '==', 2 ** 0.5, "2 ** 0.5 eq 1.4142135623730951");
 
 $v = Math::JS->new(2147483647);
 $n = $v & 429496729;
@@ -76,17 +76,6 @@ my $tester = Math::JS->new(unpack("d", pack "d", 1.4) / 10);
 cmp_ok($tester, '==', $wanted, "use of unpack/pack works as expected");
 cmp_ok("$tester", 'eq', "$wanted", "string equality is retained");
 cmp_ok("$tester", 'eq', '0.13999999999999999', "string is as expected");
-unless(Math::JS::NVSIZE == 8) {
-  my $tester = Math::JS->new(1.4 / 10);
-  cmp_ok($tester, '!=', $wanted, "equivalence is lost without unpack/pack");
-  cmp_ok("$tester", 'ne', "$wanted", "string equality is also lost");
-  if(Math::JS::USE_MPFRTOA) {
-    cmp_ok("$tester", 'eq', '0.14', "string is as expected");
-  }
-  else {
-    cmp_ok("$tester", 'eq', '0.14000000000000001', "string is as expected");
-  }
-}
 
 done_testing();
 
