@@ -7,7 +7,7 @@ use Config;
 BEGIN {
 
   # By default, the '""' overloading (sub oload_stringify) will use
-  # Math::MPFR::nvtoa() or Math::MPFR::mpfrtoa() if available. This
+  # Math::MPFR::nvtoa() if available. This
   # can be prevented by setting $ENV{NO_MPFR} to a true value - thus
   # ensuring that oload_stringify() uses sprintf("%.17g",val).
   # (This capability is useful for author testing.)
@@ -15,34 +15,21 @@ BEGIN {
   unless(defined $ENV{NO_MPFR}) {
     eval{require Math::MPFR;};
     unless($@) {
-      if($Config{nvsize} != 8) {
-        $Math::JS::USE_NVTOA = 0;
-        if($Math::MPFR::VERSION >= 4.17) {
-          $Math::JS::USE_MPFRTOA = 1;
-        }
-        else {
-          $Math::JS::USE_MPFRTOA = 0;
-        }
-      }
-      else { # $config{nvsize} == 8 (double)
+      if( $Config{nvsize} == 8 ) { # $config{nvsize} == 8 (double)
         if($Math::MPFR::VERSION >= 4.05) {
           $Math::JS::USE_NVTOA = 1;
-          $Math::JS::USE_MPFRTOA = 0;
         }
         else {
           $Math::JS::USE_NVTOA = 0;
-          $Math::JS::USE_MPFRTOA = 0;
         }
       }
     }
     else { # Math::MPFR not available
       $Math::JS::USE_NVTOA = 0;
-      $Math::JS::USE_MPFRTOA = 0;
     }
   }  # close unless{} block
   else {
     $Math::JS::USE_NVTOA = 0;
-    $Math::JS::USE_MPFRTOA = 0;
   }
 };   # close BEGIN{}  block
 
@@ -76,9 +63,8 @@ use constant MIN_SLONG => -2147483648;
 use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
 use constant IVSIZE    => $Config{ivsize};
-use constant NVSIZE    => $Config{nvsize};
 use constant USE_NVTOA => $Math::JS::USE_NVTOA;
-use constant USE_MPFRTOA => $Math::JS::USE_MPFRTOA;
+use constant USE_RYU   => 0; # For now, anyway. (TODO)
 
 our $VERSION = '0.01';
 
@@ -99,10 +85,6 @@ sub new {
     return $ret;
   }
 
-  if(NVSIZE != 8) {
-    $val = unpack('d', pack 'd', $val) if $ok == 4;
-  }
-
   my %h = ('val' => $val, 'type' => _classify($val, $ok));
   return bless(\%h, 'Math::JS');
 }
@@ -115,25 +97,12 @@ sub oload_add {
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
   die "Bad argument given to oload_add" unless $ok;
 
-  my $retval;
+  my $ret1 = $_[0]->{val};
 
-  if($ok == 1) {
-    my $retval1 = _evaluate($_[0]->{val}, $_[0]->{type});
-    my $retval2 = _evaluate($_[1]->{val}, $_[1]->{type});
+  return Math::JS->new($ret1 + $_[1]->{val})
+    if $ok == 1;
 
-    if($_[0]->{type} eq 'sint32' && $_[1]->{type} eq 'sint32') {
-      $retval = $retval1 + $retval2;
-
-      return Math::JS->new(unpack 'L', pack 'L', $retval)
-        if(is_ok($retval) == 2);
-
-      return Math::JS->new(unpack 'l', pack 'L', $retval);
-    }
-    return Math::JS->new($retval1 + $retval2);
-  }
-
-  $retval = _evaluate($_[0]->{val}, $_[0]->{type}) + $_[1];
-  return Math::JS->new($retval);
+  return Math::JS->new($ret1 + $_[1]);
 }
 
 ########### * ##########
@@ -144,25 +113,12 @@ sub oload_mul {
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
   die "Bad argument given to oload_mul" unless $ok;
 
-  my $retval;
+  my $ret1 = $_[0]->{val};
 
-  if($ok == 1) {
-    my $retval1 = _evaluate($_[0]->{val}, $_[0]->{type});
-    my $retval2 = _evaluate($_[1]->{val}, $_[1]->{type});
+  return Math::JS->new($ret1 * $_[1]->{val})
+    if $ok == 1;
 
-    if($_[0]->{type} eq 'sint32' && $_[1]->{type} eq 'sint32') {
-      $retval = $retval1 * $retval2;
-
-      return Math::JS->new(unpack 'L', pack 'L', $retval)
-        if(is_ok($retval) == 2);
-
-      return Math::JS->new(unpack 'l', pack 'L', $retval);
-    }
-    return Math::JS->new($retval1 * $retval2);
-  }
-
-  $retval = _evaluate($_[0]->{val}, $_[0]->{type}) * $_[1];
-  return Math::JS->new($retval);
+  return Math::JS->new($ret1 * $_[1]);
 }
 
 ########### - ##########
@@ -174,24 +130,18 @@ sub oload_sub {
   die "Bad argument given to oload_sub" unless $ok;
 
   my $third_arg = $_[2];
-  my $retval;
+
+  my $ret1 = $_[0]->{val};
 
   if($ok == 1) {
-    if($third_arg) {
-
-      $retval = _evaluate($_[1]->{val}, $_[1]->{type}) - _evaluate($_[0]->{val}, $_[0]->{type});
-      return Math::JS->new($retval);
-    }
-    $retval = _evaluate($_[0]->{val}, $_[0]->{type}) - _evaluate($_[1]->{val}, $_[1]->{type});
-    return Math::JS->new($retval);
+    return Math::JS->new($_[1]->{val} - $ret1)
+      if $third_arg;
+    return Math::JS->new($ret1 - $_[1]->{val});
   }
 
-  if($third_arg) {
-    $retval = $_[1] - _evaluate($_[0]->{val}, $_[0]->{type});
-    return Math::JS->new($retval);
-  }
-  $retval = _evaluate($_[0]->{val}, $_[0]->{type}) - $_[1];
-  return Math::JS->new($retval);
+  return Math::JS->new($_[1] - $ret1)
+    if $third_arg;
+  return Math::JS->new($ret1 - $_[1]);
 }
 
 ########### / ##########
@@ -203,24 +153,18 @@ sub oload_div {
   die "Bad argument given to oload_div" unless $ok;
 
   my $third_arg = $_[2];
-  my $retval;
+
+  my $ret1 = $_[0]->{val};
 
   if($ok == 1) {
-    if($third_arg) {
-
-      $retval = unpack "d", pack("d", _evaluate($_[1]->{val}, $_[1]->{type}) / _evaluate($_[0]->{val}, $_[0]->{type}));
-      return Math::JS->new($retval);
-    }
-    $retval = unpack "d", pack("d", _evaluate($_[0]->{val}, $_[0]->{type}) / _evaluate($_[1]->{val}, $_[1]->{type}));
-    return Math::JS->new($retval);
+    return Math::JS->new($_[1]->{val} / $ret1)
+      if $third_arg;
+    return Math::JS->new($ret1 / $_[1]->{val});
   }
 
-  if($third_arg) {
-    $retval = unpack "d", pack("d", $_[1] / _evaluate($_[0]->{val}, $_[0]->{type}));
-    return Math::JS->new($retval);
-  }
-  $retval = unpack "d", pack("d", _evaluate($_[0]->{val}, $_[0]->{type}) / $_[1]);
-  return Math::JS->new($retval);
+  return Math::JS->new($_[1] / $ret1)
+    if $third_arg;
+  return Math::JS->new($ret1 / $_[1]);
 }
 
 ########### ** ##########
@@ -232,24 +176,18 @@ sub oload_pow {
   die "Bad argument given to oload_div" unless $ok;
 
   my $third_arg = $_[2];
-  my $retval;
+
+  my $ret1 = $_[0]->{val};
 
   if($ok == 1) {
-    if($third_arg) {
-
-      $retval = _evaluate($_[1]->{val}, $_[1]->{type}) ** _evaluate($_[0]->{val}, $_[0]->{type});
-      return Math::JS->new($retval);
-    }
-    $retval = _evaluate($_[0]->{val}, $_[0]->{type}) ** _evaluate($_[1]->{val}, $_[1]->{type});
-    return Math::JS->new($retval);
+    return Math::JS->new($_[1]->{val} ** $ret1)
+      if $third_arg;
+    return Math::JS->new($ret1 ** $_[1]->{val});
   }
 
-  if($third_arg) {
-    $retval = $_[1] ** _evaluate($_[0]->{val}, $_[0]->{type});
-    return Math::JS->new($retval);
-  }
-  $retval = _evaluate($_[0]->{val}, $_[0]->{type}) ** $_[1];
-  return Math::JS->new($retval);
+  return Math::JS->new($_[1] ** $ret1)
+    if $third_arg;
+  return Math::JS->new($ret1 ** $_[1]);
 }
 
 ########### & ##########
@@ -267,8 +205,6 @@ sub oload_and {
   my $retval;
 
   if($ok == 1) {
-    die "'&' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) & ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -291,8 +227,6 @@ sub oload_ior {
   my $retval;
 
   if($ok == 1) {
-    die "'|' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) | ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -315,8 +249,6 @@ sub oload_xor {
   my $retval;
 
   if($ok == 1) {
-    die "'^' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-      unless ($_[0]->{type} =~ /int32/);
     $retval = ($_[0]->{val} & 0xffffffff) ^ ($_[1]->{val} & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
@@ -362,12 +294,8 @@ sub oload_stringify {
   elsif ($self->{type} eq 'uint32') { $ret = unpack("L", pack("L", $self->{val})) }
   else {
     if(USE_NVTOA)      { $ret = Math::MPFR::nvtoa  (Math::MPFR->new($self->{val})) }
-    elsif(USE_MPFRTOA) {
-      #printf "VAL: %.17g\n", $self->{val};
-      #printf "TYPE: %s\n", $self->{type};
-      #print "1: ", Math::MPFR::mpfrtoa(Math::MPFR->new(sprintf "%.17g", $self->{val})), "\n";
-      #print "2: ", Math::MPFR::mpfrtoa(Math::MPFR->new($self->{val})), "\n";
-      $ret = Math::MPFR::mpfrtoa(Math::MPFR->new(sprintf "%.17g", $self->{val}));
+    elsif(USE_RYU) {
+      return Math::RYU::d2s($self->{val});
     }
     else               { $ret = sprintf "%.17g", $self->{val} }
  }
@@ -391,11 +319,6 @@ sub oload_lte {
     if @_ > 3;
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
-
-  #if($_[2]) {
-  #  return 1 if $cmp >= 0;
-  #  return 0;
-  #}
 
   return 1 if $cmp <= 0;
   return 0;
@@ -451,9 +374,6 @@ sub oload_spaceship {
 
   my $second = $_[1];
 
-  $second = unpack "d", pack "d", $second
-    if NVSIZE != 8;
-
   if($third_arg) {
      return ($second <=> $_[0]->{val});
   }
@@ -475,7 +395,6 @@ sub oload_lshift {
   my $val   = unpack 'L', pack 'L', $_[0]->{val};
 
   my $ret = Math::JS->new(unpack 'l', pack 'l', (($_[0]->{val} & 0xffffffff) << $shift) );
-  $ret->{type} = 'sint32';
   return $ret;
 }
 
@@ -527,16 +446,6 @@ sub _classify {
   return "number" if $ok == 4;
   die "Bad 2nd arg given to Math::JS::_classify()";
 }
-
-sub _evaluate {
-  my($val, $type) = (shift, shift);
-  # "l" is signed 32-bit integer; "L" is unsigned 32-bit integer.
-  return unpack("l", pack("L", $val)) if $type eq 'sint32';
-  return unpack("L", pack("L", $val)) if $type eq 'uint32';
-  return "%.17g", (unpack("d", pack("d", $val))) if $type eq 'number';
-  return $val;
-}
-
 
 1;
 
