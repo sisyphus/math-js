@@ -12,9 +12,9 @@
   uses.
   The main interest here is to replicate the 32-bit integer arithmetic
   as performed by JavaScript.
-  However, some support for JS floating point arithmetic is provided. See
-  the sections "ASSIGNING FLOATING POINT VALUES" and "DISPLAYING FLOATING
-  POINT VALUES", below.
+  For the floating point arithmetic, JavaScript behaves identically to
+  perls configured to have $Config{nvsize} of 8, and therefore the building
+  of Math::JS is restricted to perls that have that configuration.
 
 =head1 SYNOPSIS
 
@@ -31,27 +31,14 @@
   my $ok = is_ok($arg); # used internally.
 
     This function is not exported but can be accessed as Math::JS::is_ok($arg).
-    It returns true if $arg is allowed to be used in an arithmetic
-    operation with a Math::JS object.
+    It returns true if $arg is suitable for use in an arithmetic operation
+    with a Math::JS object.
     Else it returns false.
 
   No other functions are provided, except for the subs that are responsible
   for overloading the  '+', '-', '*', '/', '**', '++', '--', '>=', '<=',
   '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '**=', '&',
-  '|', '^', '~', '&=',  '|=', '^=' and perhaps other operations.
-
-=head1 ASSIGNING FLOATING POINT VALUES
-
-  If your perl's NV size (Math::JS::NVSIZE) is 8 then it makes no
-  difference whether you do:
-  $x = Math::JS->new($p / $q);
-   or:
-  $x = Math::JS->new($p) / Math::JS->new($q);
-
-  But if NV size is not 8, then the 2 forms are not necessarily
-  equivalent, and the latter is safer (and recommended).
-  Even then, it might be possible that the 2 methods produce different
-  results - owing to double rounding.
+  '|', '^', '~', '&=',  '|=', '^=' (and perhaps other) operations.
 
 =head1 DISPLAYING FLOATING POINT VALUES
 
@@ -60,17 +47,12 @@
   (That's in addition to the fact that perl's print() function likes to
   present inaccurate values, whereas JavaScript does not.)
 
-  If your perl's $Config{nvsize} == 8 && you have Math::MPFR (version 4.05 or
-  later), then the Math::JS overloading of print() will (by default) present
-  the same value as JavaScript does.
+  If you have Math::MPFR (version 4.05 or later), then the Math::JS
+  overloading of print() will (by default) present the same value as
+  JavaScript does.
 
-  Else, if your perl's $Config{nvsize} != 8 && you have Math::MPFR (version
-  4.17 or later), then the Math::JS overloading of print() will (by default)
-  present the same value as JavaScript does .... except for subnormal values.
-  (TODO: I intend to eventually fix that little shortcoming.)
-  For subnormal values, the overloaded print() function might present more
-  decimal mantissa digits than JavaScript does - though both forms will
-  accurately represent exactly the same double-precision value.
+  TODO: Add the option of using Math::Ryu, which installs easily on
+        most systems.
 
   Else, without Math::MPFR, the overloaded print() uses perl's sprintf()
   function, which might present more decimal mantissa digits than
