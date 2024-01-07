@@ -392,8 +392,6 @@ sub oload_lshift {
   die "left-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
     unless ($type =~ /int32/);
 
-  my $val   = unpack 'L', pack 'L', $_[0]->{val};
-
   my $ret = Math::JS->new(unpack 'l', pack 'l', (($_[0]->{val} & 0xffffffff) << $shift) );
   return $ret;
 }
@@ -430,7 +428,6 @@ sub oload_rshift {
   }
 
   my $ret = Math::JS->new( ($_[0]->{val} & 0xffffffff) >> ($_[1] % 32) );
-  $ret->{type} = 'sint32';
   return $ret;
 }
 
