@@ -465,7 +465,8 @@ sub oload_lshift {
   die "Wrong number of arguments given to oload_lshift()"
     if @_ > 3;
 
-  my $shift = $_[1] % 32;
+  my $shift = abs(int $_[1]) % 32;
+  $shift = 32 - $shift if ($_[1] < 0 && $shift);
   my $type  = $_[0]->{type};
 
   die "left-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
@@ -493,7 +494,8 @@ sub oload_rshift {
   die "Wrong number of arguments given to oload_rshift()"
     if @_ > 3;
 
-  my $shift = $_[1] % 32;
+  my $shift = abs(int $_[1]) % 32;
+  $shift = 32 - $shift if ($_[1] < 0 && $shift);
   my $type  = $_[0]->{type};
 
   die "right-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
