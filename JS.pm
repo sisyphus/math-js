@@ -12,7 +12,7 @@ BEGIN {
   # ensuring that oload_stringify() uses sprintf("%.17g",val).
   # (This capability is useful for author testing.)
 
-  unless(defined $ENV{NO_MPFR}) {
+  if( 0 && !defined $ENV{NO_MPFR}) { # For now, disable the use of Math::MPFR functions
     eval{require Math::MPFR;};
     unless($@) {
       if( $Config{nvsize} == 8 ) { # $config{nvsize} == 8 (double)
@@ -195,21 +195,29 @@ sub oload_and {
   die "Wrong number of arguments given to oload_and()"
     if @_ > 3;
 
-  die "'&' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($_[0]->{type} =~ /int32/);
-
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_and" unless ($ok && $ok < 4);
+  die "Bad argument given to oload_and" unless $ok;
 
+  my $val0 = $_[0]->{val};
+  $val0 = reduce($val0)
+    if $_[0]->{type} eq 'number';
 
   my $retval;
 
   if($ok == 1) {
-    $retval = ($_[0]->{val} & 0xffffffff) & ($_[1]->{val} & 0xffffffff);
+    my $val1 = $_[1]->{val};
+    $val1 = reduce($val1)
+      if $_[1]->{type} eq 'number';
+
+    $retval = ($val0 & 0xffffffff) & ($val1 & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
 
-  $retval = ($_[0]->{val} & 0xffffffff) & ($_[1] & 0xffffffff);
+  my $val1 = $_[1];
+  $val1 = reduce($val1)
+    if $ok == 4;
+
+  $retval = ($val0 & 0xffffffff) & ($val1 & 0xffffffff);
   return Math::JS->new(unpack 'l', pack 'L', $retval);
 }
 
@@ -387,13 +395,12 @@ sub oload_lshift {
 
   my $shift = abs(int $_[1]) % 32;
   $shift = 32 - $shift if ($_[1] < 0 && $shift);
-  my $type  = $_[0]->{type};
 
-  die "left-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($type =~ /int32/);
+  my $val = $_[0]->{val};
+  $val = reduce($val)
+    if $_[0]->{type} eq 'number';
 
-  my $ret = Math::JS->new(unpack 'l', pack 'l', (($_[0]->{val} & 0xffffffff) << $shift) );
-  return $ret;
+  return Math::JS->new(unpack 'l', pack 'l', (($val & 0xffffffff) << $shift) );
 }
 
 ########### >> ##########
@@ -415,11 +422,15 @@ sub oload_rshift {
   $shift = 32 - $shift if ($_[1] < 0 && $shift);
   my $type  = $_[0]->{type};
 
-  die "right-shift operation not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($type =~ /int32/);
+  my $val  = $_[0]->{val};
 
-  my $val   = $_[0]->{val};
+  if($type eq 'number') {
+    $val = reduce($val);
+    $type = _classify($val,is_ok($val))
+      if($val <= MAX_ULONG && $val >= MIN_SLONG);
+  }
 
+  # TODO: Rewrite to avoid the need for an if{} block
   if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) {
     my $ior = 0xffffffff ^ ((1 << (32 - $shift)) - 1);
     my $val = unpack('l', pack 'L', $val) >> $shift;
@@ -427,8 +438,7 @@ sub oload_rshift {
     return Math::JS->new(unpack 'l', pack 'L', $val);
   }
 
-  my $ret = Math::JS->new( ($_[0]->{val} & 0xffffffff) >> ($_[1] % 32) );
-  return $ret;
+  return Math::JS->new( ($val & 0xffffffff) >> ($_[1] % 32) );
 }
 
 ###########################
@@ -442,6 +452,40 @@ sub _classify {
   return "sint32" if $ok == 3;
   return "number" if $ok == 4;
   die "Bad 2nd arg given to Math::JS::_classify()";
+}
+
+sub reduce {
+  # Reduce values that are greater than MAX_ULONG or
+  # less than MIN_SLONG to their appropriate value
+  # for use in bit manipulation operations.
+
+  my $mul = 1;
+  my $big = shift;
+
+  my $integer = int($big);
+  return $integer
+    if($integer <= MAX_ULONG && $integer >= MIN_SLONG);
+
+  if($big < 0) {
+    $mul = -1;
+    $big = -$big;
+  }
+  my $max = shift;
+
+  $big -= int($big / (2 ** 32)) * (2 ** 32);
+  my $ret = unpack 'l', pack 'l', $big;
+  return $ret * $mul;
+}
+
+sub is_ok {
+  my $val = shift;
+  my $ret = _is_ok($val);
+
+  if($ret == 4 && int($val) == $val) { # Might still be a 32-bit integer value
+    $ret = 2 if ($val <= MAX_SLONG && $val >= MIN_SLONG);
+    $ret = 3 if ($val > MAX_SLONG && $val <= MAX_ULONG);
+  }
+  return $ret;
 }
 
 1;
