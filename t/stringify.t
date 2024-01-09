@@ -5,7 +5,7 @@ use Test::More;
 
 warn "\nFYI: Overloading uses Math::MPFR::nvtoa\n" if Math::JS::USE_NVTOA;
 warn "\nFYI: Overloading uses Math::RYU\n" if Math::JS::USE_RYU;
-warn "\nFYI: Overloading uses sprintf(\"%.17g\", val)\n" unless (Math::JS::USE_NVTOA || Math::JS::USE_MPFRTOA);
+warn "\nFYI: Overloading uses sprintf(\"%.17g\", val)\n" unless (Math::JS::USE_NVTOA);
 
 if(Math::JS::USE_NVTOA) {
   warn "FYI: Using mpfr-", Math::MPFR::MPFR_VERSION_STRING(), "\n";
