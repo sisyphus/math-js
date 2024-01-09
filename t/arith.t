@@ -168,8 +168,8 @@ cmp_ok((Math::JS->new(-1073741823) >> 1) << 1, '==', -1073741824, "(-1073741823 
 
 my $in = Math::JS::MAX_ULONG;
 cmp_ok((Math::JS->new($in) >> 1) << 1, '==', -2, "(MAX_ULONG >> 1) << 1 => -2");
-eval { my $x = (Math::JS->new(-$in) >> 1) << 1; };
-like ($@, qr/right\-shift operation not yet implemented for Math::JS objects whose values are not 32\-bit integers/, "'>>' not currently allowed on -MAX_ULONG");
+cmp_ok((Math::JS->new(-$in) >> 1) << 1, '==', 0, "(-MAX_ULONG >> 1) << 1 => 0");
+cmp_ok(Math::JS->new(-$in) >> 1, '==', 0, "-MAX_ULONG >> 1 => 0");
 
 $in = Math::JS::MIN_SLONG; # -2147483648
 cmp_ok((Math::JS->new($in) >> 1) << 1, '==', $in, "(-2147483648 >> 1) << 1 => $in");
@@ -229,15 +229,16 @@ for(59 .. 64) {
   cmp_ok($js >> $s,  '==', $js >>  int($s),  ">> $s == >> int($s)");
 }
 
-done_testing();
+cmp_ok(Math::JS->new(2 ** 31)    & Math::JS->new(Math::JS::MAX_ULONG), '==', Math::JS::MIN_SLONG, "(2 ** 31) & 4294967295 => -2147483648");
+cmp_ok(Math::JS->new(-(2 ** 31)) & Math::JS->new(Math::JS::MAX_ULONG), '==', Math::JS::MIN_SLONG, "-(2 ** 31) & 4294967295 => -2147483648");
 
-__END__
-#######################################################
-#######################################################
-# TODO
-The following tests should all pass when (if ever) Math::JS allows bit operations
-on values that are larger than 32 bit.
+cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(9007199254740991), '==', -1, '9007199254740991 & 9007199254740991 => -1');
+cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(4294967295), '==', -1, '9007199254740991 & 4294967295 => -1');
+cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(429496729), '==', 429496729, '9007199254740991 & 429496729 => 429496729');
+cmp_ok(Math::JS->new(8007199254740991) & Math::JS->new( 7007199254740991), '==', 305168383,  '8007199254740991 & 7007199254740991 =>   305168383');
+cmp_ok(Math::JS->new(8007199254740991) & Math::JS->new(-7007199254740991), '==', 1225326593, '8007199254740991 & -7007199254740991 => 1225326593');
 
+### NEW ###
 for(0..33) {
   cmp_ok(Math::JS->new(9007199254740991) >> $_, '==', -1, "9007199254740991 >> $_ => -1");
 }
@@ -269,14 +270,20 @@ cmp_ok(Math::JS->new(-4294967296) >> 1, '==',  0, '-4294967296 >> 1 => 0');
 cmp_ok(Math::JS->new(-4294967299) >> 1, '==', -2, '-4294967299 >> -1 => -2');
 
 my $arg = (2 ** 55) + 1172;
-cmp_ok(Math::JS->new($arg) >> 1, '==', 584, "$arg >> 1 => 584");
-cmp_ok(Math::JS->new(-$arg) >> 1, '==', 584, "$arg >> 1 => -584");
+cmp_ok(Math::JS->new( $arg) >> 1, '==',  584, sprintf("%.17g",  $arg) . " >> 1 =>  584");
+cmp_ok(Math::JS->new(-$arg) >> 1, '==', -584, sprintf("%.17g", -$arg) . " >> 1 => -584");
 
 cmp_ok(Math::JS->new(1234.7) >> 1, '==', 617, '1234.7 >> 1 => 617');
 
-cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(9007199254740991), '==', -1, '9007199254740991 & 9007199254740991 => -1');
-cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(4294967295), '==', -1, '9007199254740991 & 4294967295 => -1');
-cmp_ok(Math::JS->new(9007199254740991) & Math::JS->new(429496729), '==', 429496729, '9007199254740991 & 429496729 => 429496729');
+###########
+
+done_testing();
+
+__END__
+
+
+
+
 
 
 
