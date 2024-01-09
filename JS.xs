@@ -2,7 +2,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-int is_ok(SV * in) {
+int _is_ok(SV * in) {
 
   if(!SvOK(in)) return 0;
 
@@ -50,5 +50,5 @@ MODULE = Math::JS PACKAGE = Math::JS
 PROTOTYPES: DISABLE
 
 int
-is_ok (in)
+_is_ok (in)
 	SV *	in
