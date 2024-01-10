@@ -77,6 +77,41 @@ cmp_ok($tester, '==', $wanted, "use of unpack/pack works as expected");
 cmp_ok("$tester", 'eq', "$wanted", "string equality is retained");
 cmp_ok("$tester", 'eq', '0.13999999999999999', "string is as expected");
 
+my $js = Math::JS->new(Math::JS::MAX_SLONG);
+cmp_ok($js->{type}, 'eq', 'sint32', "$js is 'sint32'");
+$js += 10;
+cmp_ok($js->{type}, 'eq', 'uint32', "+= modifies type to 'uint32'");
+$js += Math::JS::MAX_ULONG;
+cmp_ok($js->{type}, 'eq', 'number', "+= modifies type to 'number'");
+
+$js = Math::JS->new(Math::JS::MAX_SLONG);
+cmp_ok($js->{type}, 'eq', 'sint32', "$js is 'sint32'");
+$js *= 2;
+cmp_ok($js->{type}, 'eq', 'uint32', "*= modifies type to 'uint32' when appropriate");
+$js *= 2;
+cmp_ok($js->{type}, 'eq', 'number', "*= modifies type to 'number' when appropriate");
+
+$js = Math::JS->new(Math::JS::MAX_ULONG + 10);
+cmp_ok($js->{type}, 'eq', 'number', "$js is 'number'");
+$js -= 12;
+cmp_ok($js->{type}, 'eq', 'uint32', "-= modifies type to 'uint32' when appropriate");
+$js -= (Math::JS::MAX_ULONG - 100);
+cmp_ok($js->{type}, 'eq', 'sint32', "-= modifies type to 'sint32' when appropriate");
+
+$js = Math::JS->new(17);
+cmp_ok($js->{type}, 'eq', 'sint32', "$js is 'sint32'");
+$js /= 3;
+cmp_ok($js->{type}, 'eq', 'number', "/= modifies type to 'number' when appropriate");
+
+$js = Math::JS->new(Math::JS::MAX_ULONG * 5);
+cmp_ok($js->{type}, 'eq', 'number', "$js is 'number'");
+$js /= 5;
+cmp_ok($js->{type}, 'eq', 'uint32', "/= modifies type to 'uint32' when appropriate");
+$js /= 5;
+cmp_ok($js->{type}, 'eq', 'sint32', "/= modifies type to 'sint32' when appropriate");
+$js /= 5;
+cmp_ok($js->{type}, 'eq', 'number', "/= still modifies type to 'number' when appropriate");
+
 done_testing();
 
 
