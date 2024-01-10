@@ -226,20 +226,29 @@ sub oload_ior {
   die "Wrong number of arguments given to oload_ior()"
     if @_ > 3;
 
-  die "'|' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($_[0]->{type} =~ /int32/);
-
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_ior" unless ($ok && $ok < 4);
+  die "Bad argument given to oload_ior" unless $ok;
+
+  my $val0 = $_[0]->{val};
+  $val0 = reduce($val0)
+    if $_[0]->{type} eq 'number';
 
   my $retval;
 
   if($ok == 1) {
-    $retval = ($_[0]->{val} & 0xffffffff) | ($_[1]->{val} & 0xffffffff);
+    my $val1 = $_[1]->{val};
+    $val1 = reduce($val1)
+      if $_[1]->{type} eq 'number';
+
+    $retval = ($val0 & 0xffffffff) | ($val1 & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
 
-  $retval = ($_[0]->{val} & 0xffffffff) | ($_[1] & 0xffffffff);
+  my $val1 = $_[1];
+  $val1 = reduce($val1)
+    if $ok == 4;
+
+  $retval = ($val0 & 0xffffffff) | ($val1 & 0xffffffff);
   return Math::JS->new(unpack 'l', pack 'L', $retval);
 }
 
@@ -248,32 +257,40 @@ sub oload_xor {
   die "Wrong number of arguments given to oload_xor()"
     if @_ > 3;
 
-  die "'^' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($_[0]->{type} =~ /int32/);
-
   my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
-  die "Bad argument given to oload_xor" unless ($ok && $ok < 4);
+  die "Bad argument given to oload_xor" unless $ok;
+
+  my $val0 = $_[0]->{val};
+  $val0 = reduce($val0)
+    if $_[0]->{type} eq 'number';
 
   my $retval;
 
   if($ok == 1) {
-    $retval = ($_[0]->{val} & 0xffffffff) ^ ($_[1]->{val} & 0xffffffff);
+    my $val1 = $_[1]->{val};
+    $val1 = reduce($val1)
+      if $_[1]->{type} eq 'number';
+
+    $retval = ($val0 & 0xffffffff) ^ ($val1 & 0xffffffff);
     return Math::JS->new(unpack 'l', pack 'L', $retval);
   }
 
-  $retval = ($_[0]->{val} & 0xffffffff) ^ ($_[1] & 0xffffffff);
+  my $val1 = $_[1];
+  $val1 = reduce($val1)
+    if $ok == 4;
+
+  $retval = ($val0 & 0xffffffff) ^ ($val1 & 0xffffffff);
   return Math::JS->new(unpack 'l', pack 'L', $retval);
 }
 
 ########### ~ ##########
 sub oload_not {
-  die "Wrong number of arguments given to oload_ior()"
+  die "Wrong number of arguments given to oload_not()"
     if @_ > 3;
 
-  die "'~' operator overloading not yet implemented for Math::JS objects whose values are not 32-bit integers"
-    unless ($_[0]->{type} =~ /int32/);
-
   my $val = $_[0]->{val};
+  $val = reduce($val  )
+    if $_[0]->{type} eq 'number';
 
   return Math::JS->new( MAX_ULONG - $val )
     if($val > MAX_SLONG);
