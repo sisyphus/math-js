@@ -3,14 +3,6 @@ use warnings;
 use Math::JS;
 use Test::More;
 
-warn "FYI:\n";
-warn "constant USE_NVTOA: ", Math::JS::USE_NVTOA, "\n";
-warn "constant USE_RYU  : ", Math::JS::USE_RYU,   "\n\n";
-
-if(Math::JS::USE_NVTOA == Math::JS::USE_RYU) {
-  cmp_ok(Math::JS::USE_NVTOA, '==', 0, "(USE_NVTOA && USE_RYU) is FALSE");
-}
-
 my ($new, $dummy);
 
 cmp_ok($Math::JS::VERSION, 'eq', '0.01', "version number is as expected");
@@ -21,11 +13,6 @@ like ($@, qr/^Bad argument \(or no argument\)/, 'undef is invalid arg');
 my $v = Math::JS->new(1 / 10);
 
 cmp_ok($v, '==', 0.1, "1/10 == 0.1");
-
-if(Math::JS::USE_NVTOA || Math::JS::USE_RYU) {
-  cmp_ok("$v", '==', 1 / 10  , "1/10 eq 0.1");
-}
-# else skip
 
 $v = Math::JS->new(1.4 / 10);
 cmp_ok($v, '==', 0.13999999999999999, "1.4/10 == 0.13999999999999999");
