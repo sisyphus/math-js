@@ -131,17 +131,17 @@ sub oload_sub {
 
   my $third_arg = $_[2];
 
-  my $ret1 = $_[0]->{val};
+  my $ret0 = $_[0]->{val};
 
   if($ok == 1) {
-    return Math::JS->new($_[1]->{val} - $ret1)
+    return Math::JS->new($_[1]->{val} - $ret0)
       if $third_arg;
-    return Math::JS->new($ret1 - $_[1]->{val});
+    return Math::JS->new($ret0 - $_[1]->{val});
   }
 
-  return Math::JS->new($_[1] - $ret1)
+  return Math::JS->new($_[1] - $ret0)
     if $third_arg;
-  return Math::JS->new($ret1 - $_[1]);
+  return Math::JS->new($ret0 - $_[1]);
 }
 
 ########### / ##########
@@ -479,6 +479,8 @@ sub reduce {
   my $mul = 1;
   my $big = shift;
 
+  return 0 if _infnan($big);
+
   my $integer = int($big);
   return $integer
     if($integer <= MAX_ULONG && $integer >= MIN_SLONG);
@@ -499,10 +501,17 @@ sub is_ok {
   my $ret = _is_ok($val);
 
   if($ret == 4 && int($val) == $val) { # Might still be a 32-bit integer value
-    $ret = 2 if ($val <= MAX_SLONG && $val >= MIN_SLONG);
-    $ret = 3 if ($val > MAX_SLONG && $val <= MAX_ULONG);
+    $ret = 3 if ($val <= MAX_SLONG && $val >= MIN_SLONG); # signed
+    $ret = 2 if ($val > MAX_SLONG && $val <= MAX_ULONG);  # unsigned
   }
   return $ret;
+}
+
+sub _infnan {
+  my $val = shift;
+  my $inf = 2 ** 1500;
+  return 1 if ($val == $inf || $val == -$inf || $val != $val);
+  return 0;
 }
 
 1;
