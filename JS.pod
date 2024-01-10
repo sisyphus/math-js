@@ -21,7 +21,7 @@
   use warnings; use strict;
   use Math::JS;
 
-  my $js = Math::JS ->new(2147483648);
+  my $js = Math::JS->new(2147483648);
   $js >>= 1;
   print $js;
   # Outputs -1073741824 (same as JavaScript)
@@ -32,7 +32,7 @@
 
     This function is not exported but can be accessed as Math::JS::is_ok($arg).
     It returns true if $arg is suitable for use in an arithmetic operation
-    with a Math::JS object.
+    with a Math::JS object (ie, is a number).
     Else it returns false.
 
   No other functions are provided, except for the subs that are responsible
@@ -47,21 +47,9 @@
   (That's in addition to the fact that perl's print() function likes to
   present inaccurate values, whereas JavaScript does not.)
 
-  If you have Math::MPFR (version 4.05 or later), then the Math::JS
-  overloading of print() will (by default) present the same value as
-  JavaScript does.
-
-  TODO: Add the option of using Math::Ryu, which installs easily on
-        most systems.
-
-  Else, without Math::MPFR, the overloaded print() uses perl's sprintf()
-  function, which might present more decimal mantissa digits than
-  JavaScript does - though both forms will accurately represent exactly the
-  same double-precision value.
-
-  NOTE:
-      The default behaviour of using Math::MPFR functionality (when
-      available) can be overridden by defining $ENV{NO_MPFR}
+  The overloaded print() uses perl's sprintf() function, which might present
+  more decimal mantissa digits than JavaScript does - though both forms will
+  accurately represent exactly the same double-precision value.
 
 =head1 LICENSE
 
