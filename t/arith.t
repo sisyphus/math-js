@@ -306,6 +306,68 @@ my $pinf = 2 ** 1500; # +ve Inf
 my $ninf = -$pinf;    # -ve Inf
 my $nan = $pinf/$pinf;
 
+cmp_ok(Math::JS->new(Math::JS::_get_pinf()), '==', Math::JS->new($pinf), "+Inf == +Inf");
+cmp_ok(Math::JS->new(Math::JS::_get_ninf()), '==', Math::JS->new($ninf), "-Inf == -Inf");
+my $N1 = Math::JS->new(Math::JS::_get_nan());
+my $N2 = Math::JS->new($nan);
+cmp_ok($N1,  '!=', $N2,   "NaN != NaN" );
+
+my $nan_test = 1;
+$nan_test = 0 if $N1 <= $N2;
+cmp_ok($nan_test, '==', 1, "nan test 1 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 < $N2;
+cmp_ok($nan_test, '==', 1, "nan test 2 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 >= $N2;
+cmp_ok($nan_test, '==', 1, "nan test 3 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 > $N2;
+cmp_ok($nan_test, '==', 1, "nan test 4 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 <= $nan;
+cmp_ok($nan_test, '==', 1, "nan test 5 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 < $nan;
+cmp_ok($nan_test, '==', 1, "nan test 6 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 >= $nan;
+cmp_ok($nan_test, '==', 1, "nan test 7 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $N1 > $nan;
+cmp_ok($nan_test, '==', 1, "nan test 8 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $nan <= $N2;
+cmp_ok($nan_test, '==', 1, "nan test 9 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $nan < $N2;
+cmp_ok($nan_test, '==', 1, "nan test 10 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $nan >= $N2;
+cmp_ok($nan_test, '==', 1, "nan test 11 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $nan > $N2;
+cmp_ok($nan_test, '==', 1, "nan test 12 ok");
+
+$nan_test = 1;
+$nan_test = 0 if $nan == $N2;
+cmp_ok($nan_test, '==', 1, "nan test 13 ok");
+
+$nan_test = 1;
+$nan_test = 0 unless $nan != $N2;
+cmp_ok($nan_test, '==', 1, "nan test 14 ok");
+
 my @infnan = ($pinf, $ninf, $nan);
 for(@infnan) {
   cmp_ok(Math::JS::_infnan($_), '==', 1, "$_ is infnan");
