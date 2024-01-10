@@ -302,6 +302,31 @@ cmp_ok(Math::JS->new(-$arg) >> 1, '==', -584, sprintf("%.17g", -$arg) . " >> 1 =
 
 cmp_ok(Math::JS->new(1234.7) >> 1, '==', 617, '1234.7 >> 1 => 617');
 
+my $pinf = 2 ** 1500; # +ve Inf
+my $ninf = -$pinf;    # -ve Inf
+my $nan = $pinf/$pinf;
+
+my @infnan = ($pinf, $ninf, $nan);
+for(@infnan) {
+  cmp_ok(Math::JS::_infnan($_), '==', 1, "$_ is infnan");
+  cmp_ok((Math::JS->new($_))->{type}, 'eq', 'number', "$_ is of type 'number'");
+}
+
+for my $x (@infnan, 0) {
+  cmp_ok( ~ Math::JS->new($x), '==', -1, "~ Math::JS->new($x) == -1");
+  for my $y (@infnan, 0) {
+    cmp_ok(Math::JS->new($x) & Math::JS->new($y), '==', 0, "$x & $y == 0");
+    cmp_ok(Math::JS->new($x) | Math::JS->new($y), '==', 0, "$x | $y == 0");
+    cmp_ok(Math::JS->new($x) ^ Math::JS->new($y), '==', 0, "$x ^ $y == 0");
+  }
+}
+
+for my $x (@infnan, 0) {
+  for my $shift(1, 3) {
+    cmp_ok(Math::JS->new($x) >> $shift, '==', 0, "$x >> $shift == 0");
+    cmp_ok(Math::JS->new($x) << $shift, '==', 0, "$x << $shift == 0");
+  }
+}
 ###########
 
 done_testing();
