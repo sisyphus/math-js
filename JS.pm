@@ -4,35 +4,6 @@ use strict;
 use warnings;
 use Config;
 
-BEGIN {
-
-  # By default, the '""' overloading (sub oload_stringify) will use
-  # Math::MPFR::nvtoa() if available. This
-  # can be prevented by setting $ENV{NO_MPFR} to a true value - thus
-  # ensuring that oload_stringify() uses sprintf("%.17g",val).
-  # (This capability is useful for author testing.)
-
-  if( 0 && !defined $ENV{NO_MPFR}) { # For now, disable the use of Math::MPFR functions
-    eval{require Math::MPFR;};
-    unless($@) {
-      if( $Config{nvsize} == 8 ) { # $config{nvsize} == 8 (double)
-        if($Math::MPFR::VERSION >= 4.05) {
-          $Math::JS::USE_NVTOA = 1;
-        }
-        else {
-          $Math::JS::USE_NVTOA = 0;
-        }
-      }
-    }
-    else { # Math::MPFR not available
-      $Math::JS::USE_NVTOA = 0;
-    }
-  }  # close unless{} block
-  else {
-    $Math::JS::USE_NVTOA = 0;
-  }
-};   # close BEGIN{}  block
-
 use overload
 '+'    => \&oload_add,
 '-'    => \&oload_sub,
@@ -44,6 +15,7 @@ use overload
 '>='   => \&oload_gte,
 '<='   => \&oload_lte,
 '=='   => \&oload_equiv,
+'!='   => \&oload_not_equiv,
 '>'    => \&oload_gt,
 '<'    => \&oload_lt,
 '<=>'  => \&oload_spaceship,
@@ -63,8 +35,6 @@ use constant MIN_SLONG => -2147483648;
 use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
 use constant IVSIZE    => $Config{ivsize};
-use constant USE_NVTOA => $Math::JS::USE_NVTOA;
-use constant USE_RYU   => 0; # For now, anyway. (TODO)
 
 our $VERSION = '0.01';
 
@@ -177,17 +147,23 @@ sub oload_pow {
 
   my $third_arg = $_[2];
 
-  my $ret1 = $_[0]->{val};
+  my $val0 = $_[0]->{val};
 
   if($ok == 1) {
-    return Math::JS->new($_[1]->{val} ** $ret1)
-      if $third_arg;
-    return Math::JS->new($ret1 ** $_[1]->{val});
+    if($third_arg) {
+      return Math::JS->new(_get_nan())
+        if($_[1]->{val} < 0 && $val0 != int($val0));
+      return Math::JS->new($_[1]->{val} ** $val0);
+    }
+
+    return Math::JS->new(_get_nan())
+      if($val0 < 0 && $_[1]->{val} != int($_[1]->{val}));
+    return Math::JS->new($val0 ** $_[1]->{val});
   }
 
-  return Math::JS->new($_[1] ** $ret1)
+  return Math::JS->new($_[1] ** $val0)
     if $third_arg;
-  return Math::JS->new($ret1 ** $_[1]);
+  return Math::JS->new($val0 ** $_[1]);
 }
 
 ########### & ##########
@@ -318,11 +294,7 @@ sub oload_stringify {
   if    ($self->{type} eq 'sint32') { $ret = unpack("l", pack("L", $self->{val})) }
   elsif ($self->{type} eq 'uint32') { $ret = unpack("L", pack("L", $self->{val})) }
   else {
-    if(USE_NVTOA)      { $ret = Math::MPFR::nvtoa  (Math::MPFR->new($self->{val})) }
-    elsif(USE_RYU) {
-      return Math::RYU::d2s($self->{val});
-    }
-    else               { $ret = sprintf "%.17g", $self->{val} }
+    $ret = sprintf "%.17g", $self->{val};
  }
   return "$ret";
 }
@@ -334,6 +306,7 @@ sub oload_gte {
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
 
+  return 0 if !defined $cmp;
   return 1 if $cmp >= 0;
   return 0;
 }
@@ -344,7 +317,7 @@ sub oload_lte {
     if @_ > 3;
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
-
+  return 0 if !defined $cmp;
   return 1 if $cmp <= 0;
   return 0;
 }
@@ -354,8 +327,43 @@ sub oload_equiv {
   die "Wrong number of arguments given to oload_equiv()"
     if @_ > 3;
 
-  return 1 if(oload_spaceship($_[0], $_[1], $_[2]) == 0);
+#  return 0 if _isnan($_[0]->{val});
+#  if(is_ok($_[1]) == 1) {
+#    return 0
+#      if _isnan($_[1]->{val});
+#  }
+#  else {
+#    return 0
+#      if _isnan($_[1]);
+#  }
+
+  my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
+
+  return 0 if !defined $cmp;
+  return 1 if $cmp == 0;
   return 0;
+}
+
+########### != ##########
+sub oload_not_equiv {
+  die "Wrong number of arguments given to oload_equiv()"
+    if @_ > 3;
+
+#  return 1 if _isnan($_[0]->{val});
+#  if(is_ok($_[1]) == 1) {
+#    return 1
+#      if _isnan($_[1]->{val});
+#  }
+#  else {
+#    return 1
+#      if _isnan($_[1]);
+#  }
+
+  my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
+
+  return 1 if !defined($cmp);
+  return 0 if $cmp == 0;
+  return 1;
 }
 
 ########### > ##########
@@ -365,6 +373,7 @@ sub oload_gt {
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
 
+  return 0 if !defined $cmp;
   return 1 if $cmp > 0;
   return 0;
 }
@@ -376,6 +385,7 @@ sub oload_lt {
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
 
+  return 0 if !defined $cmp;
   return 1 if $cmp < 0;
   return 0;
 }
@@ -391,6 +401,7 @@ sub oload_spaceship {
   my $third_arg = $_[2];
 
   if($ok == 1) {
+
     if($third_arg) {
       return ($_[1]->{val} <=> $_[0]->{val});
     }
@@ -512,6 +523,25 @@ sub _infnan {
   my $inf = 2 ** 1500;
   return 1 if ($val == $inf || $val == -$inf || $val != $val);
   return 0;
+}
+
+sub _isnan {
+  my $val = shift;
+  return 1 if $val != $val;
+  return 0;
+}
+
+sub _get_pinf { # Return Math::JS object with a value of +Inf
+  return 2 ** 1500;
+}
+
+sub _get_ninf { # Return Math::JS object with a value of -Inf
+  return -(2 ** 1500);
+}
+
+sub _get_nan {
+  my $inf = 2 ** 1500;
+  return ($inf / $inf);
 }
 
 1;
