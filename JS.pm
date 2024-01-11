@@ -36,7 +36,7 @@ use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
 use constant IVSIZE    => $Config{ivsize};
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 require DynaLoader;
 Math::JS->DynaLoader::bootstrap($VERSION);
