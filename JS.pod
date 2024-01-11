@@ -21,24 +21,21 @@
   use warnings; use strict;
   use Math::JS;
 
-  my $js = Math::JS->new(2147483648);
-  $js >>= 1;
-  print $js;
+  my $js0 = Math::JS->new(2147483648);
+  $js0 >>= 1;
+  print $js0, "\n";
   # Outputs -1073741824 (same as JavaScript)
+  my $js1 = ($js0 + 10000) & 123456789;
+  print $js1, "\n";
+  # Outputs 1296  (same as javascript)
 
 =head1 FUNCTIONS
 
-  my $ok = is_ok($arg); # used internally.
+  Exports no functions.
 
-    This function is not exported but can be accessed as Math::JS::is_ok($arg).
-    It returns true if $arg is suitable for use in an arithmetic operation
-    with a Math::JS object (ie, is a number).
-    Else it returns false.
-
-  No other functions are provided, except for the subs that are responsible
-  for overloading the  '+', '-', '*', '/', '**', '++', '--', '>=', '<=',
+  Overloading of the '+', '-', '*', '/', '**', '++', '--', '>=', '<=',
   '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '**=', '&',
-  '|', '^', '~', '&=',  '|=', '^=' (and perhaps other) operations.
+  '|', '^', '~', '&=',  '|=', '^=' operators is provided.
 
 =head1 DISPLAYING FLOATING POINT VALUES
 
@@ -47,7 +44,7 @@
   (That's in addition to the fact that perl's print() function likes to
   present inaccurate values, whereas JavaScript does not.)
 
-  The overloaded print() uses perl's sprintf() function, which might present
+  The overloading of '""' uses perl's sprintf() function, which might present
   more decimal mantissa digits than JavaScript does - though both forms will
   accurately represent exactly the same double-precision value.
 
