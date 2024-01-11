@@ -3,6 +3,7 @@ package Math::JS;
 use strict;
 use warnings;
 use Config;
+use 5.030; # avoid buggy floating-point assignments
 
 use overload
 '+'    => \&oload_add,

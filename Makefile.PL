@@ -2,6 +2,8 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
+use 5.030; # avoid buggy floating-point assignments
+
 if($Config::Config{nvsize} != 8) {
  warn "Aborting: This module currently requires that \$Config{nvsize} is 8\n";
  exit 0;

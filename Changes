@@ -1,6 +1,8 @@
 Changes file for Math::JS
 
 0.02
+ - Avoid dealing with buggy floating-point assignments by not supporting
+   perls older than 5.30.
 
 0.01
  - first release
