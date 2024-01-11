@@ -327,16 +327,6 @@ sub oload_equiv {
   die "Wrong number of arguments given to oload_equiv()"
     if @_ > 3;
 
-#  return 0 if _isnan($_[0]->{val});
-#  if(is_ok($_[1]) == 1) {
-#    return 0
-#      if _isnan($_[1]->{val});
-#  }
-#  else {
-#    return 0
-#      if _isnan($_[1]);
-#  }
-
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
 
   return 0 if !defined $cmp;
@@ -348,16 +338,6 @@ sub oload_equiv {
 sub oload_not_equiv {
   die "Wrong number of arguments given to oload_equiv()"
     if @_ > 3;
-
-#  return 1 if _isnan($_[0]->{val});
-#  if(is_ok($_[1]) == 1) {
-#    return 1
-#      if _isnan($_[1]->{val});
-#  }
-#  else {
-#    return 1
-#      if _isnan($_[1]);
-#  }
 
   my $cmp = oload_spaceship($_[0], $_[1], $_[2]);
 
@@ -454,18 +434,19 @@ sub oload_rshift {
 
   if($type eq 'number') {
     $val = reduce($val);
-    $type = _classify($val,is_ok($val))
-      if($val <= MAX_ULONG && $val >= MIN_SLONG);
+    $type = _classify($val,is_ok($val)); # Determine whether it's
+                                         # 'sint32' or 'uint32'
+    #  if($val <= MAX_ULONG && $val >= MIN_SLONG);
   }
 
-  # TODO: Rewrite to avoid the need for an if{} block
-  if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) {
+  if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) { # Highest order bit is set
     my $ior = 0xffffffff ^ ((1 << (32 - $shift)) - 1);
     my $val = unpack('l', pack 'L', $val) >> $shift;
     $val |= $ior;
     return Math::JS->new(unpack 'l', pack 'L', $val);
   }
 
+  # Highest order bit is unset
   return Math::JS->new( ($val & 0xffffffff) >> ($_[1] % 32) );
 }
 
