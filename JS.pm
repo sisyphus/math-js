@@ -43,6 +43,12 @@ require DynaLoader;
 Math::JS->DynaLoader::bootstrap($VERSION);
 sub dl_load_flags {0}
 
+# The "type" of a Math::JS object's value will be either 'sint32', 'uint32'
+# or 'number'. Roughly speaking, these types are (respectively) "unsigned
+# 32-bit integer", "signed 32-bit integer" and "floating-point number".
+# Hence, relying on the value returned by is_ok(), we have:
+my %classify = (2 => 'uint32', 3 => 'sint32', 4 => 'number');
+
 sub new {
   shift if(!ref($_[0]) && $_[0] eq "Math::JS"); # 'new' has been called as a method
   my $val = shift;
@@ -56,7 +62,7 @@ sub new {
     return $ret;
   }
 
-  my %h = ('val' => $val, 'type' => _classify($val, $ok));
+  my %h = ('val' => $val, 'type' => $classify{$ok});
   return bless(\%h, 'Math::JS');
 }
 
@@ -435,9 +441,8 @@ sub oload_rshift {
 
   if($type eq 'number') {
     $val = reduce($val);
-    $type = _classify($val,is_ok($val)); # Determine whether it's
-                                         # 'sint32' or 'uint32'
-    #  if($val <= MAX_ULONG && $val >= MIN_SLONG);
+    $type = $classify{is_ok($val)}; # Determine whether it reduced
+                                    # to 'sint32' or 'uint32'.
   }
 
   if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) { # Highest order bit is set
@@ -454,20 +459,12 @@ sub oload_rshift {
 ###########################
 ###########################
 
-sub _classify {
-  my $arg = shift;
-  return $arg->{type} if(ref($arg) && ref($arg) eq "Math::JS");
-  my $ok = shift;
-  return "uint32" if $ok == 2;
-  return "sint32" if $ok == 3;
-  return "number" if $ok == 4;
-  die "Bad 2nd arg given to Math::JS::_classify()";
-}
 
 sub reduce {
   # Reduce values that are greater than MAX_ULONG or
   # less than MIN_SLONG to their appropriate value
-  # for use in bit manipulation operations.
+  # for use in bit manipulation operations, following
+  # the procedure used by javascipt.
 
   my $mul = 1;
   my $big = shift;
@@ -498,8 +495,7 @@ sub is_ok {
   return 4 if $val != int($val); # Handles NaN
   return 4 if ($val > 4294967295 || $val < -2147483648); # Handles +Inf and -Inf
   return 2 if $val >= 2147483648;
-  return 3 if $val >= -2147483648; # This is the only remaining possibility
-  die "In is_ok(): Failed to categorize $val";
+  return 3; # This is the only remaining possibility
 }
 
 sub _infnan {
