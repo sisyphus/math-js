@@ -11,36 +11,7 @@ int _is_ok(SV * in) {
     if(strEQ(h, "Math::JS")) return 1;
   }
 
-#if IVSIZE == 4
-
-  if( !SvPOK(in) ) {
-    if( SvIOK(in) ) {
-      if( SvUOK(in) ) return 2;
-      return 3;
-    }
-    if( SvNOK(in) ) return 4;
-  }
-
-#else
-
-  if( !SvPOK(in) ) {
-    IV iv = SvIVX(in);
-    if( SvIOK(in) ) {
-      if( SvUOK(in) ) return 4;
-      if( iv >= 0) {
-        if(iv > 4294967295) return 4;
-        if(iv > 2147483647) return 2;
-        return 3;
-      }
-
-      if(iv < -2147483648LL) return 4;
-      return 3;
-    }
-    if( SvNOK(in) ) return 4;
-  }
-
-#endif
-
+  if(SvIOK(in) || SvNOK(in)) return 2;
   return 0;
 }
 

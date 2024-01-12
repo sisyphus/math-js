@@ -493,11 +493,13 @@ sub is_ok {
   my $val = shift;
   my $ret = _is_ok($val);
 
-  if($ret == 4 && int($val) == $val) { # Might still be a 32-bit integer value
-    $ret = 3 if ($val <= MAX_SLONG && $val >= MIN_SLONG); # signed
-    $ret = 2 if ($val > MAX_SLONG && $val <= MAX_ULONG);  # unsigned
-  }
-  return $ret;
+  return $ret if $ret < 2;
+
+  return 4 if $val != int($val); # Handles NaN
+  return 4 if ($val > 4294967295 || $val < -2147483648); # Handles +Inf and -Inf
+  return 2 if $val >= 2147483648;
+  return 3 if $val >= -2147483648; # This is the only remaining possibility
+  die "In is_ok(): Failed to categorize $val";
 }
 
 sub _infnan {

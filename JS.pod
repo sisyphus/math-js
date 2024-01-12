@@ -15,6 +15,9 @@
   For the floating point arithmetic, JavaScript behaves identically to
   perls configured to have $Config{nvsize} of 8, and therefore the building
   of Math::JS is restricted to perls that have that configuration.
+  Prior to perl-5.30, perl's assignment of floating-point values to
+  double-precision NVs was buggy - hence we also limit this module to
+  perl-5.30.0 and later.
 
 =head1 SYNOPSIS
 

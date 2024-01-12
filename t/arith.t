@@ -391,6 +391,9 @@ for my $x (@infnan, 0) {
 }
 ###########
 
+my $infval = 2 ** 1050;
+cmp_ok(Math::JS::is_ok($infval / $infval), '==', 4, "is_ok(NaN) returns 4");
+
 done_testing();
 
 __END__
