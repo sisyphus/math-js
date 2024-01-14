@@ -131,17 +131,17 @@ sub oload_div {
 
   my $third_arg = $_[2];
 
-  my $ret1 = $_[0]->{val};
+  my $ret0 = $_[0]->{val};
 
   if($ok == 1) {
-    return Math::JS->new($_[1]->{val} / $ret1)
+    return Math::JS->new($_[1]->{val} / $ret0)
       if $third_arg;
-    return Math::JS->new($ret1 / $_[1]->{val});
+    return Math::JS->new($ret0 / $_[1]->{val});
   }
 
-  return Math::JS->new($_[1] / $ret1)
+  return Math::JS->new($_[1] / $ret0)
     if $third_arg;
-  return Math::JS->new($ret1 / $_[1]);
+  return Math::JS->new($ret0 / $_[1]);
 }
 
 ########### ** ##########
@@ -283,14 +283,16 @@ sub oload_not {
 
 ########### ++ ##########
 sub oload_inc {
-  $_[0]->{type} = 'uint32' if $_[0]->{val} == MAX_SLONG;
-  ($_[0]->{val}) += 1;;
+  $_[0]->{val} += 1;
+  # 'type' needs to be checked
+  $_[0]->{type} = $classify{is_ok($_[0]->{val})};
 }
 
 ########### -- ##########
 sub oload_dec {
-  $_[0]->{type} = 'sint32' if $_[0]->{val} == MIN_ULONG;
-  ($_[0]->{val}) -= 1;
+  $_[0]->{val} -= 1;
+  # 'type' needs to be checked
+  $_[0]->{type} = $classify{is_ok($_[0]->{val})};
 }
 
 ########### "" ##########
