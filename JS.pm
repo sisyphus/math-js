@@ -10,6 +10,7 @@ use overload
 '-'    => \&oload_sub,
 '*'    => \&oload_mul,
 '/'    => \&oload_div,
+'%'    => \&oload_mod,
 '**'   => \&oload_pow,
 '++'   => \&oload_inc,
 '--'   => \&oload_dec,
@@ -111,8 +112,6 @@ sub oload_sub {
   my $ret0 = $_[0]->{val};
 
   if($ok == 1) {
-    return Math::JS->new($_[1]->{val} - $ret0)
-      if $third_arg;
     return Math::JS->new($ret0 - $_[1]->{val});
   }
 
@@ -134,14 +133,69 @@ sub oload_div {
   my $ret0 = $_[0]->{val};
 
   if($ok == 1) {
-    return Math::JS->new($_[1]->{val} / $ret0)
-      if $third_arg;
     return Math::JS->new($ret0 / $_[1]->{val});
   }
 
   return Math::JS->new($_[1] / $ret0)
     if $third_arg;
   return Math::JS->new($ret0 / $_[1]);
+}
+
+########### % ##########
+sub oload_mod {
+  die "Wrong number of arguments given to oload_mod()"
+    if @_ > 3;
+
+  my $ok = is_ok($_[1]); # check that 2nd arg is suitable.
+  die "Bad argument given to oload_mod" unless $ok;
+
+  my $third_arg = $_[2];
+
+  my $ret0 = $_[0]->{val};
+  my ($ret, $val, $diff, $mod);
+
+  if($ok == 1) {
+    $val = int($ret0);
+    $mod = abs($_[1]->{val});
+    $diff = $ret0 - $val;
+    if($mod - int($mod)) { # modulus is not an integer
+      $ret = $val - (int($val / $mod) * $mod);
+    }
+    else {
+      $ret = $val % $mod;
+    }
+    $ret -= $mod if($ret && $ret0 < 0);
+    $ret += $diff;
+    return Math::JS->new($ret);
+  }
+
+  if($third_arg) {
+    $val = int($_[1]);
+    $mod = abs($ret0);
+    $diff = $_[1] - $val;
+    if($mod - int($mod)) { # modulus is not an integer
+      $ret = $val - (int($val / $mod) * $mod);
+    }
+    else {
+      $ret = $val % $mod;
+    }
+    $ret -= $mod if($ret && $_[1] < 0);
+    $ret += $diff;
+  }
+  else {
+    $val = int($ret0);
+    $mod = abs($_[1]);
+    $diff = $ret0 - $val;
+    if($mod - int($mod)) { # modulus is not an integer
+      $ret = $val - (int($val / $mod) * $mod);
+    }
+    else {
+      $ret = $val % $mod;
+    }
+    $ret -= $mod if($ret && $ret0 < 0);
+    $ret += $diff;
+  }
+  return Math::JS->new($ret);
 }
 
 ########### ** ##########
