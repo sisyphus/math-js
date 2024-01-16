@@ -5,6 +5,8 @@ use warnings;
 use Math::JS;
 use Test::More;
 
+my %classify = (2 => 'uint32', 3 => 'sint32', 4 => 'number'); # Duplicate of JS.pm's %classify
+
 cmp_ok(Math::JS->new(2147483648),  '==',  2147483648, "test 1");
 cmp_ok(Math::JS->new(-2147483648), '==', -2147483648, "test 2");
 
@@ -394,25 +396,202 @@ for my $x (@infnan, 0) {
 my $infval = 2 ** 1050;
 cmp_ok(Math::JS::is_ok($infval / $infval), '==', 4, "is_ok(NaN) returns 4");
 
-cmp_ok(Math::JS->new( 1000) %  17, '==',  14,  "1000 % 17 =>  14");
-cmp_ok(Math::JS->new( 1000) % -17, '==',  14,  "1000 % -17 => 14");
-cmp_ok(Math::JS->new(-1000) %  17, '==', -14, "-1000 % 17 => -14");
-cmp_ok(Math::JS->new(-1000) % -17, '==', -14, "-1000 % 17 => -14");
+my $num = Math::JS->new(1000);
+my $res = $num % 17;
+cmp_ok($res, '==',  14,  "1000 % 17 =>  14");
+cmp_ok($res->{type}, 'eq', 'sint32', " type ok for 1000 % 17");
+$num %= 17;
+cmp_ok($num->{type}, 'eq', 'sint32', " type ok for 1000 %= 17");
+cmp_ok($num, '==', $res, "1: \$res == $num");
 
-cmp_ok(Math::JS->new( 1000.9) %  17, '==',  14.899999999999977,  "1000.9 %  17 =>  14.899999999999977");
-cmp_ok(Math::JS->new( 1000.9) % -17, '==',  14.899999999999977,  "1000.9 % -17 =>  14.899999999999977");
-cmp_ok(Math::JS->new(-1000.9) %  17, '==', -14.899999999999977, "-1000.9 %  17 => -14.899999999999977");
-cmp_ok(Math::JS->new(-1000.9) % -17, '==', -14.899999999999977, "-1000.9 % -17 => -14.899999999999977");
+$num = Math::JS->new(1000);
+$res = $num % -17;
+cmp_ok($res, '==',  14,  "1000 % -17 => 14");
+cmp_ok($res->{type}, 'eq', 'sint32', " type ok for 1000 % -17");
+$num %= -17;
+cmp_ok($num->{type}, 'eq', 'sint32', " type ok for 1000 %= -17");
+cmp_ok($num, '==', $res, "2: \$res == $num");
 
-cmp_ok(Math::JS->new( 1000) %  17.5, '==',  2.5,  "1000 %  17.5 =>  2.5");
-cmp_ok(Math::JS->new( 1000) % -17.5, '==',  2.5,  "1000 % -17.5 =>  2.5");
-#cmp_ok(Math::JS->new(-1000) %  17.5, '==', -2.5, "-1000 %  17.5 => -2.5");
-#cmp_ok(Math::JS->new(-1000) % -17.5, '==', -2.5, "-1000 % -17.5 => -2.5");
-#
-#cmp_ok(Math::JS->new( 1000.9) %  17.5, '==',  3.3999999999999773,  "1000 %  17.5 =>  3.3999999999999773");
-#cmp_ok(Math::JS->new( 1000.9) % -17.5, '==',  3.3999999999999773,  "1000 % -17.5 =>  3.3999999999999773");
-#cmp_ok(Math::JS->new(-1000.9) %  17.5, '==', -3.3999999999999773, "-1000 %  17.5 => -3.3999999999999773");
-#cmp_ok(Math::JS->new(-1000.9) % -17.5, '==', -3.3999999999999773, "-1000 % -17.5 => -3.3999999999999773");
+$num = Math::JS->new(-1000);
+$res = $num % 17;
+cmp_ok($res, '==', -14, "-1000 % 17 => -14");
+cmp_ok($res->{type}, 'eq', 'sint32', " type ok for -1000 % 17");
+$num %= 17;
+cmp_ok($num->{type}, 'eq', 'sint32', " type ok for -1000 %= 17");
+cmp_ok($num, '==', $res, "3: \$res == $num");
+
+$num = Math::JS->new(-1000);
+$res = $num % -17;
+cmp_ok($res, '==', -14, "-1000 % 17 => -14");
+cmp_ok($res->{type}, 'eq', 'sint32', " type ok for -1000 % -17");
+$num %= -17;
+cmp_ok($num->{type}, 'eq', 'sint32', " type ok for -1000 %= -17");
+cmp_ok($num, '==', $res, "4: \$res == $num");
+
+$num = Math::JS->new(1000.9);
+$res = $num % 17;
+cmp_ok($res, '==',  14.899999999999977,  "1000.9 %  17 =>  14.899999999999977");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000.9 % 17");
+$num %= 17;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000.9 %= 17");
+cmp_ok($num, '==', $res, "5: \$res == $num");
+
+$num = Math::JS->new(1000.9);
+$res = $num % -17;
+cmp_ok($res, '==',  14.899999999999977,  "1000.9 % -17 =>  14.899999999999977");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000.9 % -17");
+$num %= -17;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000.9 %= -17");
+cmp_ok($num, '==', $res, "6: \$res == $num");
+
+$num = Math::JS->new(-1000.9);
+$res = $num % 17;
+cmp_ok($res, '==', -14.899999999999977, "-1000.9 %  17 => -14.899999999999977");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000.9 % 17");
+$num %= 17;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000.9 %= 17");
+cmp_ok($num, '==', $res, "7: \$res == $num");
+
+$num = Math::JS->new(-1000.9);
+$res = $num % -17;
+cmp_ok($res, '==', -14.899999999999977, "-1000.9 % -17 => -14.899999999999977");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000.9 % -17");
+$num %= -17;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000.9 %= -17");
+cmp_ok($num, '==', $res, "8: \$res == $num");
+
+$num = Math::JS->new(1000);
+$res = $num % 17.5;
+cmp_ok($res, '==',  2.5,  "1000 %  17.5 =>  2.5");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000 % 17.5");
+$num %= 17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000 %= 17.5");
+cmp_ok($num, '==', $res, "9: \$res == $num");
+
+$num = Math::JS->new(1000);
+$res = $num % -17.5;
+cmp_ok($res, '==',  2.5,  "1000 % -17.5 =>  2.5");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000 % -17.5");
+$num %= -17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000 %= -17.5");
+cmp_ok($num, '==', $res, "10: \$res == $num");
+
+$num = Math::JS->new(-1000);
+$res = $num % 17.5;
+cmp_ok($res, '==', -2.5, "-1000 %  17.5 => -2.5");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000 % 17.5");
+$num %= 17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000 %= 17.5");
+cmp_ok($num, '==', $res, "11: \$res == $num");
+
+$num = Math::JS->new(-1000);
+$res = $num % -17.5;
+cmp_ok($res, '==', -2.5, "-1000 % -17.5 => -2.5");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000 % -17.5");
+$num %= -17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000 %= 17.5");
+
+cmp_ok($num, '==', $res, "12: \$res == $num");
+$num = Math::JS->new(1000.9);
+$res = $num % 17.5;
+cmp_ok($res, '==',  3.3999999999999773,  "1000 %  17.5 =>  3.3999999999999773");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000.9 % 17.5");
+$num %= 17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000.9 %= 17.5");
+cmp_ok($num, '==', $res, "13: \$res == $num");
+
+$num = Math::JS->new(1000.9);
+$res = $num % -17.5;
+cmp_ok($res, '==',  3.3999999999999773,  "1000 % -17.5 =>  3.3999999999999773");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for 1000.9 % -17.5");
+$num %= -17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for 1000.9 %= -17.5");
+cmp_ok($num, '==', $res, "14: \$res == $num");
+
+$num = Math::JS->new(-1000.9);
+$res = $num % 17.5;
+cmp_ok($res, '==', -3.3999999999999773, "-1000 %  17.5 => -3.3999999999999773");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000.9 % 17.5");
+$num %= 17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000.9 %= 17.5");
+cmp_ok($num, '==', $res, "15: \$res == $num");
+
+$num = Math::JS->new(-1000.9);
+$res = $num % -17.5;
+cmp_ok($res, '==', -3.3999999999999773, "-1000.9 -17.5 => -3.3999999999999773");
+cmp_ok($res->{type}, 'eq', 'number', " type ok for -1000.9 % -17.5");
+$num %= -17.5;
+cmp_ok($num->{type}, 'eq', 'number', " type ok for -1000.9 %= -17.5");
+cmp_ok($num, '==', $res, "16: \$res == $num");
+
+########################################################
+cmp_ok(Math::JS->new( 1000) % Math::JS->new( 17), '==',  14,  "1000 % 17 =>  14");
+cmp_ok(Math::JS->new( 1000) % Math::JS->new(-17), '==',  14,  "1000 % -17 => 14");
+cmp_ok(Math::JS->new(-1000) % Math::JS->new( 17), '==', -14, "-1000 % 17 => -14");
+cmp_ok(Math::JS->new(-1000) % Math::JS->new(-17), '==', -14, "-1000 % 17 => -14");
+
+cmp_ok(Math::JS->new( 1000.9) % Math::JS->new( 17), '==',  14.899999999999977,  "1000.9 %  17 =>  14.899999999999977");
+cmp_ok(Math::JS->new( 1000.9) % Math::JS->new(-17), '==',  14.899999999999977,  "1000.9 % -17 =>  14.899999999999977");
+cmp_ok(Math::JS->new(-1000.9) % Math::JS->new( 17), '==', -14.899999999999977, "-1000.9 %  17 => -14.899999999999977");
+cmp_ok(Math::JS->new(-1000.9) % Math::JS->new(-17), '==', -14.899999999999977, "-1000.9 % -17 => -14.899999999999977");
+
+cmp_ok(Math::JS->new( 1000) % Math::JS->new( 17.5), '==',  2.5,  "1000 %  17.5 =>  2.5");
+cmp_ok(Math::JS->new( 1000) % Math::JS->new(-17.5), '==',  2.5,  "1000 % -17.5 =>  2.5");
+cmp_ok(Math::JS->new(-1000) % Math::JS->new( 17.5), '==', -2.5, "-1000 %  17.5 => -2.5");
+cmp_ok(Math::JS->new(-1000) % Math::JS->new(-17.5), '==', -2.5, "-1000 % -17.5 => -2.5");
+
+cmp_ok(Math::JS->new( 1000.9) % Math::JS->new( 17.5), '==',  3.3999999999999773,  "1000 %  17.5 =>  3.3999999999999773");
+cmp_ok(Math::JS->new( 1000.9) % Math::JS->new(-17.5), '==',  3.3999999999999773,  "1000 % -17.5 =>  3.3999999999999773");
+cmp_ok(Math::JS->new(-1000.9) % Math::JS->new( 17.5), '==', -3.3999999999999773, "-1000 %  17.5 => -3.3999999999999773");
+cmp_ok(Math::JS->new(-1000.9) % Math::JS->new(-17.5), '==', -3.3999999999999773, "-1000 % -17.5 => -3.3999999999999773");
+#######################################################
+
+for my $n(19, 19.3, -19, -19.3) {
+  for my $d(125, 125.7, -125,-125.7) {
+    my $num = Math::JS->new($n);
+    my $den = Math::JS->new($d);
+    my $res = $num % $den;
+    cmp_ok($res, '==', $n, "$n % $d => $n");
+    cmp_ok($res->{type}, 'eq', $classify{Math::JS::is_ok($n)}, "resulting type ok for $n % $d");
+    cmp_ok($num->{type}, 'eq', $classify{Math::JS::is_ok($n)}, "numerator type ok for $n % $d");
+    cmp_ok($den->{type}, 'eq', $classify{Math::JS::is_ok($d)}, "denominator type ok for $n % $d");
+  }
+}
+
+cmp_ok(9007199254740991 % Math::JS->new (2147483648),  '==',  2147483647, "9007199254740991 %  2147483648 =>  2147483647");
+cmp_ok(9007199254740991 % Math::JS->new(-2147483648),  '==',  2147483647, "9007199254740991 % -2147483648 =>  2147483647");
+cmp_ok(9007199254740991 % Math::JS->new (2147483647),  '==',  4194303,    "9007199254740991 %  2147483647 =>  4194303");
+cmp_ok(9007199254740991 % Math::JS->new(-2147483647),  '==',  4194303,    "9007199254740991 % -2147483647 =>  4194303");
+cmp_ok(-9007199254740991 % Math::JS->new (2147483647), '==', -4194303,    "9007199254740991 %  2147483647 =>  -4194303");
+cmp_ok(-9007199254740991 % Math::JS->new(-2147483647), '==', -4194303,    "9007199254740991 % -2147483647 =>  -4194303");
+
+cmp_ok(Math::JS->new(3)  / 0, '==', $pinf,  '3 / 0 =>  Infinity');
+cmp_ok(Math::JS->new(-3) / 0, '==', $ninf, '-3 / 0 => -Infinity');
+
+my $rop = Math::JS->new(3) % 0;
+cmp_ok(Math::JS::_isnan($rop->{val}), '==', 1, "3 % 0 => NaN");
+$rop = Math::JS->new(-3) % 0;
+cmp_ok(Math::JS::_isnan($rop->{val}), '==', 1, "-3 % 0 => NaN");
+
+$rop =  Math::JS->new($pinf) % 15;
+cmp_ok(Math::JS::_isnan($rop->{val}), '==', 1, "+inf % 15 => NaN");
+$rop =  $ninf %Math::JS->new(-15);
+cmp_ok(Math::JS::_isnan($rop->{val}), '==', 1, "-inf % -15 => NaN");
+
+$rop = -123 % Math::JS->new($pinf);
+cmp_ok($rop, '==', -123, "-123 % +inf => -123");
+$rop = 123 % Math::JS->new($ninf);
+cmp_ok($rop, '==', 123, "123 % -inf => 123");
+
+# 0 % anything-except-nan returns 0
+cmp_ok(Math::JS->new(0) % 17,    '==', 0, '0 % 17 => 0');
+cmp_ok(Math::JS->new(0) % $ninf, '==', 0, '0 % -inf => 0');
+cmp_ok(Math::JS->new(0) % $nan,  '!=', 0, '0 % NaN != 0');   # returns NaN
+
+
+
+# TODO: The following test fails. 859064762.875 is returned by the Math::JS implementation,
+#cmp_ok(900719925474099.7 % Math::JS->new(2147483647.83), '==', 859064762.882, "900719925474099.7 % 2147483647.83 =>  859064762.882");
 
 done_testing();
 

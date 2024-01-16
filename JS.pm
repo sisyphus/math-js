@@ -129,16 +129,24 @@ sub oload_div {
   die "Bad argument given to oload_div" unless $ok;
 
   my $third_arg = $_[2];
-
-  my $ret0 = $_[0]->{val};
+  my ($num, $den, $ret);
 
   if($ok == 1) {
-    return Math::JS->new($ret0 / $_[1]->{val});
+    $num = $_[0]->{val};
+    $den = $_[1]->{val};
+  }
+  elsif($third_arg) {
+    $num = $_[1];
+    $den = $_[0]->{val};
+  }
+  else {
+    $num = $_[0]->{val};
+    $den = $_[1];
   }
 
-  return Math::JS->new($_[1] / $ret0)
-    if $third_arg;
-  return Math::JS->new($ret0 / $_[1]);
+  if($den == 0) { $ret = $num < 0 ? _get_ninf() : _get_pinf() }
+  else { $ret = $num / $den }
+  return Math::JS->new($ret);
 }
 
 ########### % ##########
@@ -150,51 +158,26 @@ sub oload_mod {
   die "Bad argument given to oload_mod" unless $ok;
 
   my $third_arg = $_[2];
-
-  my $ret0 = $_[0]->{val};
-  my ($ret, $val, $diff, $mod);
+  my ($num, $den);
 
   if($ok == 1) {
-    $val = int($ret0);
-    $mod = abs($_[1]->{val});
-    $diff = $ret0 - $val;
-    if($mod - int($mod)) { # modulus is not an integer
-      $ret = $val - (int($val / $mod) * $mod);
-    }
-    else {
-      $ret = $val % $mod;
-    }
-    $ret -= $mod if($ret && $ret0 < 0);
-    $ret += $diff;
-    return Math::JS->new($ret);
+    $num = $_[0]->{val};
+    $den = $_[1]->{val};
   }
-
-  if($third_arg) {
-    $val = int($_[1]);
-    $mod = abs($ret0);
-    $diff = $_[1] - $val;
-    if($mod - int($mod)) { # modulus is not an integer
-      $ret = $val - (int($val / $mod) * $mod);
-    }
-    else {
-      $ret = $val % $mod;
-    }
-    $ret -= $mod if($ret && $_[1] < 0);
-    $ret += $diff;
+  elsif($third_arg) {
+    $num = $_[1];
+    $den = $_[0]->{val};
   }
   else {
-    $val = int($ret0);
-    $mod = abs($_[1]);
-    $diff = $ret0 - $val;
-    if($mod - int($mod)) { # modulus is not an integer
-      $ret = $val - (int($val / $mod) * $mod);
-    }
-    else {
-      $ret = $val % $mod;
-    }
-    $ret -= $mod if($ret && $ret0 < 0);
-    $ret += $diff;
+    $num = $_[0]->{val};
+    $den = $_[1];
   }
+
+  return Math::JS->new(_get_nan())
+    if(_infnan($num) || _isnan($den) || $den == 0);
+  return Math::JS->new($num)
+    if(_isinf($den) || $num == 0);
+  my $ret = _modulus($num,  $den);
   return Math::JS->new($ret);
 }
 
@@ -567,6 +550,12 @@ sub _isnan {
   return 0;
 }
 
+sub _isinf {
+  my $val = shift;
+  return 1 if abs($val) == 2 ** 1500;
+  return 0;
+}
+
 sub _get_pinf { # Return Math::JS object with a value of +Inf
   return 2 ** 1500;
 }
@@ -578,6 +567,17 @@ sub _get_ninf { # Return Math::JS object with a value of -Inf
 sub _get_nan {
   my $inf = 2 ** 1500;
   return ($inf / $inf);
+}
+
+sub _modulus {
+   my($n, $d) = (shift, shift);
+
+   my $val = int($n);
+   my $mod = abs($d);
+   my $diff = $n - $val;
+   my $ret = $val - (int($val / $mod) * $mod);
+   $ret += $diff;
+   return $ret;
 }
 
 1;
