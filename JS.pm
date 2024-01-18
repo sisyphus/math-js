@@ -177,8 +177,7 @@ sub oload_mod {
     if(_infnan($num) || _isnan($den) || $den == 0);
   return Math::JS->new($num)
     if(_isinf($den) || $num == 0);
-  my $ret = _modulus($num,  $den);
-  return Math::JS->new($ret);
+  return Math::JS->new(_fmod($num, $den));
 }
 
 ########### ** ##########
@@ -567,17 +566,6 @@ sub _get_ninf { # Return Math::JS object with a value of -Inf
 sub _get_nan {
   my $inf = 2 ** 1500;
   return ($inf / $inf);
-}
-
-sub _modulus {
-   my($n, $d) = (shift, shift);
-
-   my $val = int($n);
-   my $mod = abs($d);
-   my $diff = $n - $val;
-   my $ret = $val - (int($val / $mod) * $mod);
-   $ret += $diff;
-   return $ret;
 }
 
 1;

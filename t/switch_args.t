@@ -27,4 +27,56 @@ for my $js1(98 / $js0, 2 * $js0) {
   cmp_ok($js1, '==', 14, "Test $t: value is 14");
 }
 
+$t++;
+my ($num, $den) = (501234, 117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234, 117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (501234, -117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234, -117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+
+$t++;
+($num, $den) = (501234.7, 117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234.7, 117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (501234.7, -117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234.7, -117);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+
+$t++;
+($num, $den) = (501234, 117.12);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234, 117.12);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (501234, -117.12);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234, -117.12);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+
+$t++;
+($num, $den) = (501234.61, 117.02);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234.61, 117.02);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (5012346.61, -117.02);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+$t++;
+($num, $den) = (-501234.61, -117.02);
+cmp_ok(Math::JS->new($num) % $den, '==', $num % Math::JS->new($den), "Test $t: switch_args ok with '%' op");
+
 done_testing();

@@ -10,11 +10,12 @@
   Assign numeric values to Math::JS objects, and perform arithmetic
   operations on those values according to the rules that JavaScript
   uses.
-  The main interest here is to replicate the 32-bit integer arithmetic
-  as performed by JavaScript.
-  For the floating point arithmetic, JavaScript behaves identically to
-  perls configured to have $Config{nvsize} of 8, and therefore the building
-  of Math::JS is restricted to perls that have that configuration.
+  This module was prompted by https://www.perlmonks.org/?node=11155911
+  and the unexpected arithmetical behaviour revealed therein.
+  JavaScript uses the C 'double' as its floating point data type, and
+  therefore the building of Math::JS is restricted to perls that have
+  that same configuration - ie where $Config{nvtype} is 'double' and
+  $Config{nvsize} is 8.
   Prior to perl-5.30, perl's assignment of floating-point values to
   double-precision NVs was buggy - hence we also limit this module to
   perl-5.30.0 and later.
