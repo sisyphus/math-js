@@ -1,6 +1,8 @@
 Changes file for Math::JS
 
 0.03
+ - Provide sub urs() to perform unsigned 32-bit right shift as per
+   JavaScript's '>>>' operator.
  - Overload '%' operator to mimic JS '%' operation (by wrapping C's fmod
    function).
  - Add new test files t/switch_args.t, t/inc_dec.t.

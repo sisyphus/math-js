@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Math::JS;
+use Math::JS qw(urs);
 use Test::More;
 
 my %classify = (2 => 'uint32', 3 => 'sint32', 4 => 'number'); # Duplicate of JS.pm's %classify
@@ -202,12 +202,13 @@ for(
   Math::JS->new(Math::JS::MIN_SLONG),
   Math::JS->new(Math::JS::LOW_31BIT),
 ) {
-  cmp_ok($_ >> 0, '==', unpack( 'l', pack 'l',$_->{val} ), "$_ >> 0 == " . unpack 'l', pack 'l', $_->{val});
-  cmp_ok($_ << 0, '==', unpack( 'l', pack 'l',$_->{val} ), "$_ << 0 == " . unpack 'l', pack 'l', $_->{val});
+  my $num = $_->{val};
+  cmp_ok($_ >> 0, '==', unpack( 'l', pack 'l',$_->{val} ), "$num >> 0 == " . unpack 'l', pack 'l', $_->{val});
+  cmp_ok($_ << 0, '==', unpack( 'l', pack 'l',$_->{val} ), "$num << 0 == " . unpack 'l', pack 'l', $_->{val});
 
-  cmp_ok($_ & $_, '==', unpack( 'l', pack 'l',$_->{val} ), "$_ & $_ == " . unpack 'l', pack 'l', $_->{val});
-  cmp_ok($_ | $_, '==', unpack( 'l', pack 'l',$_->{val} ), "$_ | $_ == " . unpack 'l', pack 'l', $_->{val});
-  cmp_ok($_ ^ $_, '==', 0, "$_ ^ $_ == 0");
+  cmp_ok($_ & $_, '==', unpack( 'l', pack 'l',$_->{val} ), "$num & $num == " . unpack 'l', pack 'l', $_->{val});
+  cmp_ok($_ | $_, '==', unpack( 'l', pack 'l',$_->{val} ), "$num | $num == " . unpack 'l', pack 'l', $_->{val});
+  cmp_ok($_ ^ $_, '==', 0, "$num ^ $num == 0");
 }
 
 my $js = Math::JS->new(123456789);
@@ -592,6 +593,66 @@ cmp_ok(900719925474099.7 % Math::JS->new(2147483647.83 ), '==', 859064762.882, "
 cmp_ok(900719925474099.7 % Math::JS->new(-2147483647.83 ), '==', 859064762.882, "900719925474099.7 % -2147483647.83 =>  859064762.882");
 cmp_ok(-900719925474099.7 % Math::JS->new(2147483647.83 ), '==', -859064762.882, "-900719925474099.7 % 2147483647.83 =>  -859064762.882");
 cmp_ok(-900719925474099.7 % Math::JS->new(-2147483647.83 ), '==', -859064762.882, "-900719925474099.7 % -2147483647.83 =>  -859064762.882");
+
+# Test the urs() emulation of JS's '>>>' operator.
+$rop = urs(Math::JS->new(Math::JS::MAX_ULONG), 2);
+cmp_ok($rop, '==', 1073741823, "4294967295 >>> 2 => 1073741823");
+cmp_ok($rop->{type}, 'eq', 'sint32', "A: type is 'sint32");
+
+$rop = urs(Math::JS->new(Math::JS::MAX_ULONG * -1), 2);
+cmp_ok($rop, '==', 0, "-4294967295 >>> 2 => 0");
+
+$rop = urs(Math::JS->new(-1), 2);
+cmp_ok($rop, '==', 1073741823, "-1 >>> 2 => 1073741823");
+
+$rop = urs(Math::JS->new(9007199254740900), 2);
+cmp_ok($rop, '==', 1073741801, "9007199254740900 >>> 2 => 1073741801");
+
+$rop = urs(Math::JS->new(-9007199254740900), 2);
+cmp_ok($rop, '==', 23,  "-9007199254740900 >>> 2 => 23");
+
+$rop = urs(Math::JS->new(900719925474090), 2);
+cmp_ok($rop, '==', 214748362,  "900719925474090 >>> 2 => 214748362");
+
+$rop = urs(Math::JS->new(-900719925474090), 2);
+cmp_ok($rop, '==', 858993461,  "-900719925474090 >>> 2 => 858993461");
+
+$rop = urs(Math::JS->new(900719925474090.9), 2);
+cmp_ok($rop, '==', 214748362,  "900719925474090.9 >>> 2 => 214748362");
+
+$rop = urs(Math::JS->new(-900719925474090.9), 2);
+cmp_ok($rop, '==', 858993461,  "-900719925474090.9 >>> 2 => 858993461");
+
+$rop = urs(Math::JS->new(900719925474090.9), 34.72);
+cmp_ok($rop, '==', 214748362,  "900719925474090.9 >>> 34.72 => 214748362");
+
+$rop = urs(Math::JS->new(-900719925474090.9), 34.92);
+cmp_ok($rop, '==', 858993461,  "-900719925474090.9 >>> 34.92 => 858993461");
+
+$rop = urs(Math::JS->new(900719925474090.9), -2);
+cmp_ok($rop, '==', 0,  "900719925474090.9 >>> -2 => 0");
+
+$rop = urs(Math::JS->new(-900719925474090.9), -2);
+cmp_ok($rop, '==', 3,  "-900719925474090.9 >>> -2 => 3");
+
+$rop = urs(Math::JS->new(900719925474090.9), -2.9);
+cmp_ok($rop, '==', 0,  "900719925474090.9 >>> -2.9 => 0");
+
+$rop = urs(Math::JS->new(-900719925474090.9), -2.9);
+cmp_ok($rop, '==', 3,  "-900719925474090.9 >>> -2.9 => 3");
+
+for(1..100) {
+  my $val = rand(900719925474099);
+  $val *= -1 if $_ & 1;
+  my $shift = 1 + rand(31);
+  $shift *= -1 unless $_ % 3;
+
+  my $op = Math::JS->new($val);
+  my $rop = urs($op, $shift);
+  cmp_ok($rop, '>=', 0, "$_: $op >>> $shift >= 0");
+  cmp_ok($rop, '<=', 2147483647, "$_: $op >>> $shift <= 2147483647");
+  cmp_ok($rop->{type}, 'eq', 'sint32', "$_: $rop is of type 'sint32'");
+}
 
 done_testing();
 

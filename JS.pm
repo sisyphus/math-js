@@ -40,6 +40,11 @@ use constant IVSIZE    => $Config{ivsize};
 
 our $VERSION = '0.03';
 
+require Exporter;
+*import = \&Exporter::import;
+@Math::JS::EXPORT = ();
+@Math::JS::EXPORT_OK = qw(urs);
+
 require DynaLoader;
 Math::JS->DynaLoader::bootstrap($VERSION);
 sub dl_load_flags {0}
@@ -494,9 +499,39 @@ sub oload_rshift {
   return Math::JS->new( ($val & 0xffffffff) >> ($_[1] % 32) );
 }
 
-###########################
-###########################
+########### >>> ##########
+sub urs { # unsigned 32-bit right shift (JavaScript's '>>>' operator).
+          # This function is not available via overloading, and is
+          # exported only on request ie - use Math::JS qw(urs);
 
+  die "Wrong number of arguments given to urs()"
+    unless @_ == 2;
+
+  # 1st argument must be a Math::JS object
+  die "Bad first argument given to urs()"
+    unless ref($_[0]) eq 'Math::JS';
+
+  # 2nd arg must be a perl number (IV or NV);
+  die "Bad second arg given to urs()"
+   unless is_ok($_[1]) > 1;
+
+  my $shift = abs(int $_[1]) % 32;
+  $shift = 32 - $shift if ($_[1] < 0 && $shift);
+  my $type  = $_[0]->{type};
+
+  my $val  = $_[0]->{val};
+
+  if($type eq 'number') {
+    $val = reduce($val);
+    # $val is either type 'uint3' or 'sint32' ... doesn't matter here.
+  }
+
+  $val = unpack('L', pack 'L', $val) >> $shift;
+  return Math::JS->new($val);
+}
+
+###########################
+###########################
 
 sub reduce {
   # Reduce values that are greater than MAX_ULONG or

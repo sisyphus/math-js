@@ -35,7 +35,13 @@
 
 =head1 FUNCTIONS
 
-  Exports no functions.
+  Exports no functions by default, and only one finction upon request:
+
+  $rop = urs($op, $shift);
+    Emulate JavaScript's '>>>' operator.
+    An usnsigned 32-bit rightshift of $shift places is performed on the
+    value held by the Math::JS object $op. $rop is a created Math::JS
+    object that holds, as its value, the result of that right shift.
 
   Overloading of the '+', '-', '*', '/', '%', '**', '++', '--', '>=',
   '<=', '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '%=',
@@ -51,6 +57,10 @@
   The overloading of '""' uses perl's sprintf() function, which might present
   more decimal mantissa digits than JavaScript does - though both forms will
   accurately represent exactly the same double-precision value.
+
+  TODO: Use Math::Ryu to format the string, instead of perl's sprintf().
+        But first, I have to reformat the string that Math::Ryu returns,
+        otherwise little will have been achieved.
 
 =head1 LICENSE
 
