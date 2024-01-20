@@ -1,5 +1,7 @@
 Changes file for Math::JS
 
+0.04
+
 0.03
  - Provide sub urs() to perform unsigned 32-bit right shift as per
    JavaScript's '>>>' operator.

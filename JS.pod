@@ -35,7 +35,7 @@
 
 =head1 FUNCTIONS
 
-  Exports no functions by default, and only one finction upon request:
+  Exports no functions by default, and only one function upon request:
 
   $rop = urs($op, $shift);
     Emulate JavaScript's '>>>' operator.

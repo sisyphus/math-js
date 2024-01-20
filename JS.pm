@@ -38,7 +38,7 @@ use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
 use constant IVSIZE    => $Config{ivsize};
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 require Exporter;
 *import = \&Exporter::import;
