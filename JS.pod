@@ -54,9 +54,17 @@
   (That's in addition to the fact that perl's print() function likes to
   present inaccurate values, whereas JavaScript does not.)
 
-  The overloading of '""' uses perl's sprintf() function, which might present
-  more decimal mantissa digits than JavaScript does - though both forms will
-  accurately represent exactly the same double-precision value.
+  As of Math-JS-0.04, Math-Ryu-0.06 or later will be automatically used by
+  the overloading of '""' if such a Math::Ryu installation is found.
+  This should provide good agreement between the outputs of JavaScript
+  and Math::JS. (Please report any discrepancies encountered.)
+  Where the formats differ, they should both assign to exactly the same
+  double-precision value.
+
+  If a suitable installation of Math::Ryu is not available then
+  overloading of '""' uses perl's sprintf() function, which might present
+  more decimal mantissa digits than JavaScript does - though both forms
+  should assign to exactly the same double-precision value.
 
   TODO: Use Math::Ryu to format the string, instead of perl's sprintf().
         But first, I have to reformat the string that Math::Ryu returns,

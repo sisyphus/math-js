@@ -1,6 +1,9 @@
 Changes file for Math::JS
 
 0.04
+ - The overloading of '""' (stringification of values held by Math::JS
+   objects) now automaticaly utilizes Math::Ryu if version 0.06 or later
+   of that module is found. Otherwise, sprintf(%.17g, ...) is still used.
 
 0.03
  - Provide sub urs() to perform unsigned 32-bit right shift as per

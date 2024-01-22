@@ -3,6 +3,14 @@ package Math::JS;
 use strict;
 use warnings;
 use Config;
+
+BEGIN {
+  $::bool = 0;
+  eval {require Math::Ryu;};
+  if(!$@ && $Math::Ryu::VERSION >= 0.06) {
+    $::bool = 1;
+  }
+};
 use 5.030; # avoid buggy floating-point assignments
 
 use overload
@@ -36,6 +44,7 @@ use constant MIN_ULONG =>  2147483648;  # 1<<31 (Lowest positive value that sets
 use constant MIN_SLONG => -2147483648;
 use constant LOW_31BIT =>  1073741824;  # 1<<30 (Lowest 31 bit positive number)
 use constant MAX_NUM   =>  9007199254740991;
+use constant USE_RYU => $::bool; # set in BEGIN{} block
 use constant IVSIZE    => $Config{ivsize};
 
 our $VERSION = '0.04';
@@ -338,13 +347,27 @@ sub oload_dec {
 
 ########### "" ##########
 sub oload_stringify {
-  my $self = shift;
+  my $val = $_[0]->{val};
   # "l" is signed 32-bit integer; "L" is unsigned 32-bit integer.
   my $ret;
-  if    ($self->{type} eq 'sint32') { $ret = unpack("l", pack("L", $self->{val})) }
-  elsif ($self->{type} eq 'uint32') { $ret = unpack("L", pack("L", $self->{val})) }
+  if    ($_[0]->{type} eq 'sint32') { $ret = unpack("l", pack("L", $val)) }
+  elsif ($_[0]->{type} eq 'uint32') { $ret = unpack("L", pack("L", $val)) }
+  elsif (_isinf($val)) {
+      $ret = $val > 0 ? 'Infinity' : '-Infinity';
+  }
+  elsif(_isnan($val)) {
+     $ret = 'nan';
+  }
+  elsif ($val < 1e+21 && $val == int($val)) {
+    $ret = sprintf "%.21g", $val;
+  }
   else {
-    $ret = sprintf "%.17g", $self->{val};
+    if(USE_RYU) {
+      $ret = Math::Ryu::fmtpy(Math::Ryu::d2s($val));
+    }
+    else {
+      $ret = sprintf "%.17g", $val;
+    }
  }
   return "$ret";
 }
