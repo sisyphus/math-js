@@ -59,11 +59,26 @@ cmp_ok("$js", 'eq', '9007199254740991', "9007199254740991.0 displays as expected
 $js = Math::JS->new(4294967297);
 cmp_ok("$js", 'eq', '4294967297', "4294967297 displays as expected");
 
-$js = Math::JS->new(1e19);
-cmp_ok("$js", 'eq', '1' . '0' x 19, "1e+19 displays as expected");
+# The next 2 tests might not pass if sprintf() is being used.
+# They pass with sprintf() on some systems, but not others.
+# Since the documentation acknowledges that sprintf() might
+# produce differing results, we can skip the following two
+# tests unless Math::Ryu is being used for the formatting.
 
-$js = Math::JS->new(9e20);
-cmp_ok("$js", 'eq', '9' . '0' x 20, "9e+20 displays as expected");
+if($ryu) {
+  $js = Math::JS->new(1e19);
+  cmp_ok("$js", 'eq', '1' . '0' x 19, "1e+19 displays as expected");
+
+  $js = Math::JS->new(9e20);
+  cmp_ok("$js", 'eq', '9' . '0' x 20, "9e+20 displays as expected");
+}
+
+# Having possibly skipped the last 2 tests, we can at least check
+# that $js == the expected value:
+
+cmp_ok("$js", '==', '9' . '0' x 20, "9e+20 is evaluated as expected");
+$js = Math::JS->new(1e19);
+cmp_ok("$js", '==', '1' . '0' x 19, "1e+19 is evaluated as expected");
 
 $js = Math::JS->new(1e21);
 cmp_ok("$js", 'eq', '1e+21', "1e+21 displays as expected");
