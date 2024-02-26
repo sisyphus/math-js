@@ -75,8 +75,8 @@ if($ryu) {
 
 # Having possibly skipped the last 2 tests, we can at least check
 # that $js == the expected value:
-
-cmp_ok("$js", '==', '9' . '0' x 20, "9e+20 is evaluated as expected");
+my $expected = $ryu ? '9' . '0' x 20 : '4294967297';
+cmp_ok("$js", '==', $expected, "strings are evaluated as expected");
 $js = Math::JS->new(1e19);
 cmp_ok("$js", '==', '1' . '0' x 19, "1e+19 is evaluated as expected");
 
