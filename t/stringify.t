@@ -5,7 +5,7 @@ use Test::More;
 
 my $ryu = Math::JS::USE_RYU;
 if($ryu) {
-  warn "\nFYI: Stringifying the values of Math::JS objects uses the Ryu algorithm\n";
+  warn "\nFYI: Stringifying the values of Math::JS objects uses Math::Ryu version $Math::Ryu::VERSION\n";
 }
 else {
   warn "\nFYI: Stringifying the values of Math::JS objects uses sprintf(\"%.17g\", val)\n";
