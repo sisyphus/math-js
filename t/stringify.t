@@ -81,7 +81,13 @@ $js = Math::JS->new(1e19);
 cmp_ok("$js", '==', '1' . '0' x 19, "1e+19 is evaluated as expected");
 
 $js = Math::JS->new(1e21);
-cmp_ok("$js", 'eq', '1e+21', "1e+21 displays as expected");
+if($ryu) {
+  cmp_ok("$js", 'eq', '1e+21', "1e+21 displays as expected");
+}
+else {
+  # With "%.17g" formatting, the exponent can be either "+21" or "+021".
+  like("$js", qr/^1e\+0?21$/, "1e21 displays as expected");
+}
 
 
 done_testing();

@@ -1,7 +1,7 @@
 Changes file for Math::JS
 
 0.05
- - Fix bug in t/stringify.t
+ - Fix bugs in t/stringify.t
 
 0.04
  - The overloading of '""' (stringification of values held by Math::JS
