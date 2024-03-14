@@ -1,5 +1,7 @@
 Changes file for Math::JS
 
+0.06
+
 0.05
  - Fix bugs in t/stringify.t
 
