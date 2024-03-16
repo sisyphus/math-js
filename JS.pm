@@ -359,6 +359,12 @@ sub oload_stringify {
      $ret = 'nan';
   }
   elsif ($val < 1e+21 && $val == int($val)) {
+    # sprintf("%.21g", $val) doesn't always provide the desired format.
+    # (Such occurrences are rare - probably an old libc.) See:
+    # https://www.cpantesters.org/cpan/report/ef98593c-e29b-11ee-aded-31476e8775ea
+    # https://www.cpantesters.org/cpan/report/eb868936-e29b-11ee-aded-31476e8775ea
+    # For now, we just live with this inadequacy :-(
+
     $ret = sprintf "%.21g", $val;
   }
   else {

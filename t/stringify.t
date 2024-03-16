@@ -36,6 +36,15 @@ cmp_ok("$js", 'eq', '1.4142135623730951' , "sqrt(2) displays as expected");
 $js = Math::JS->new(1.4 / 10);
 cmp_ok("$js", 'eq', '0.13999999999999999' , "1.4 / 10 displays as expected");
 
+# Avoid the following  on perls older than 5.30.0 because
+# these older perls may not assign the given values correctly.
+
+if($] < 5.03) {
+  warn "Avoiding remaining tests because this perl ($]) can assign incorrect values\n";
+  done_testing;
+  exit 0;
+}
+
 $js = Math::JS->new(1e+23);
 $got = $ryu ? '1e+23' : sprintf("%.17g", 1e+23);
 cmp_ok("$js", 'eq', $got, "1e+23 displays as expected");
@@ -59,13 +68,17 @@ cmp_ok("$js", 'eq', '9007199254740991', "9007199254740991.0 displays as expected
 $js = Math::JS->new(4294967297);
 cmp_ok("$js", 'eq', '4294967297', "4294967297 displays as expected");
 
-# The next 2 tests might not pass if sprintf() is being used.
-# They pass with sprintf() on some systems, but not others.
-# Since the documentation acknowledges that sprintf() might
-# produce differing results, we can skip the following two
-# tests unless Math::Ryu is being used for the formatting.
+# The next 2 tests always use sprintf() - which can (rarely)
+# produce the wrong format - though the represented value will
+# be correct.
+# Math::Ryu is never used with these 2 tests.
+# We TODO these tests on systems where they will fail.
 
-if($ryu) {
+TODO: {
+
+  local $TODO = '"%.21g" formats 1e19 and 1e21 incorrectly'
+    if sprintf("%.21g", 9e20) ne '900000000000000000000';
+
   $js = Math::JS->new(1e19);
   cmp_ok("$js", 'eq', '1' . '0' x 19, "1e+19 displays as expected");
 
@@ -73,7 +86,7 @@ if($ryu) {
   cmp_ok("$js", 'eq', '9' . '0' x 20, "9e+20 displays as expected");
 }
 
-# Having possibly skipped the last 2 tests, we can at least check
+# Having possibly avoided the last 2 tests, we can at least check
 # that $js == the expected value:
 my $expected = $ryu ? '9' . '0' x 20 : '4294967297';
 cmp_ok("$js", '==', $expected, "strings are evaluated as expected");
