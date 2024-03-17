@@ -1,6 +1,8 @@
 Changes file for Math::JS
 
 0.06
+ - Allow this module to now be built on perls older than 5.30.0.
+ - Add README file.
 
 0.05
  - Fix bugs in t/stringify.t

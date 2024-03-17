@@ -14,9 +14,14 @@ my $v = Math::JS->new(1 / 10);
 
 cmp_ok($v, '==', 0.1, "1/10 == 0.1");
 
-$v = Math::JS->new(1.4 / 10);
-cmp_ok($v, '==', 0.13999999999999999, "1.4/10 == 0.13999999999999999");
-cmp_ok("$v", '==', 1.4 / 10, "1.4/10 eq 0.13999999999999999");
+if($] >= 5.03) {
+  $v = Math::JS->new(1.4 / 10);
+  cmp_ok($v, '==', 0.13999999999999999, "1.4/10 == 0.13999999999999999");
+  cmp_ok("$v", '==', 1.4 / 10, "1.4/10 eq 0.13999999999999999");
+}
+else {
+  warn "\n2 tests were skipped because this perl ($])\n assigns the value 0.13999999999999999 incorrectly\n";
+}
 
 $v = Math::JS->new(2);
 my $n = $v ** 0.5;
@@ -60,8 +65,13 @@ cmp_ok($v->{type}, 'eq', 'uint32', "4294967295 is 'uint32' type");
 # Sanity Check:
 my $wanted = Math::JS->new(0.13999999999999999);
 my $tester = Math::JS->new(unpack("d", pack "d", 1.4) / 10);
-cmp_ok($tester, '==', $wanted, "use of unpack/pack works as expected");
-cmp_ok("$tester", 'eq', "$wanted", "string equality is retained");
+if($] >= 5.03) {
+  cmp_ok($tester, '==', $wanted, "use of unpack/pack works as expected");
+  cmp_ok("$tester", 'eq', "$wanted", "string equality is retained");
+}
+else {
+  warn "Another 2 tests were skipped because this perl ($])\n assigns the value 0.13999999999999999 incorrectly\n";
+}
 cmp_ok("$tester", 'eq', '0.13999999999999999', "string is as expected");
 
 my $js = Math::JS->new(Math::JS::MAX_SLONG);

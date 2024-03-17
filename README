@@ -1,0 +1,51 @@
+================================================================================
+
+This module was prompted by https://www.perlmonks.org/?node=11155911.
+
+Integer operations (<<, >>, &, |, ^, and ~) can be rather weird in javascript.
+This module aims at reproducing those javascript operations in perl, by
+overloading those operators (<<, >>, &, |, ^, and ~) to perform as they do in
+javascript. For example:
+
+use Math::JS;
+$x = Math::JS->new(712318);
+print ~$x;
+
+That will output -712319, which is what javascript outputs for ~712318.
+
+This module also provides operations on floating-point values, and these too
+are performed as per the way that javascript does them.
+
+Currently this module can be built only on perls whose nvtype is 'double'.
+You can check the nvtype of your perl by running 'perl -V:nvtype'.
+At some future date I might make the modifications that will allow Math::JS
+to build on perls whose nvtype is '__float128' or 'long double'.
+
+CONSIDERATIONS RE FLOATING POINT VALUES ONLY.
+=============================================
+
+Be aware that, on perls older than 5.30.0, perl can mis-assign some
+floating-point values, and this can lead to unexpected results.
+For example, I have old perls that will incorrectly assign 0.13999999999999999
+as 0.14000000000000001.
+This will cause the expression 'print Math::JS->new(0.13999999999999999)' to
+ouput '0.14', whereas the correct ouptut for an input of '0.13999999999999999'
+is '0.13999999999999999'.
+('0.14' is the correct output for an input of '0.14000000000000001'.)
+I make no effort to detect or report such occurrences in the Math::JS code,
+though I do check for it in the test suite.
+It's best to simply upgrade perl to at least version 5.30.0.
+
+Another issue (relevant for all perls) is that the floating point value that
+Math::JS outputs might be formatted differently to javascript's rendition.
+This will be a very rare occurrence if Math::Ryu has been installed. In fact,
+if sprintf("%.21g", ...) formatting, which is used only in limited cases, is
+not buggy then such floating-point discrepancies should not occur at all.
+
+However, if Math::Ryu has not been installed, then "%.17g" sprintf formatting
+will be used in its place - and "%.17g" formatting will sometimes present
+more decimal digits than are needed.
+Importantly, even when additional digits have been provided, the 2 (different)
+strings will assign to exactly the same double-precision value.
+
+sisyphus@cpan.org

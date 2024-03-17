@@ -16,9 +16,6 @@
   therefore the building of Math::JS is restricted to perls that have
   that same configuration - ie where $Config{nvtype} is 'double' and
   $Config{nvsize} is 8.
-  Prior to perl-5.30, perl's assignment of floating-point values to
-  double-precision NVs was buggy - hence we also limit this module to
-  perl-5.30.0 and later.
 
 =head1 SYNOPSIS
 

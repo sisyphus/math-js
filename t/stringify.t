@@ -39,12 +39,6 @@ cmp_ok("$js", 'eq', '0.13999999999999999' , "1.4 / 10 displays as expected");
 # Avoid the following  on perls older than 5.30.0 because
 # these older perls may not assign the given values correctly.
 
-if($] < 5.03) {
-  warn "Avoiding remaining tests because this perl ($]) can assign incorrect values\n";
-  done_testing;
-  exit 0;
-}
-
 $js = Math::JS->new(1e+23);
 $got = $ryu ? '1e+23' : sprintf("%.17g", 1e+23);
 cmp_ok("$js", 'eq', $got, "1e+23 displays as expected");
@@ -88,7 +82,8 @@ TODO: {
 
 # Having possibly avoided the last 2 tests, we can at least check
 # that $js == the expected value:
-my $expected = $ryu ? '9' . '0' x 20 : '4294967297';
+my $expected = $ryu ? '9' . '0' x 20 : '9e+20';
+
 cmp_ok("$js", '==', $expected, "strings are evaluated as expected");
 $js = Math::JS->new(1e19);
 cmp_ok("$js", '==', '1' . '0' x 19, "1e+19 is evaluated as expected");

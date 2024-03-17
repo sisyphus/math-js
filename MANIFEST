@@ -4,6 +4,7 @@ JS.pod
 JS.xs
 Makefile.PL
 MANIFEST
+README
 t/arith.t
 t/basic.t
 t/inc_dec.t

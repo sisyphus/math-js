@@ -11,7 +11,7 @@ BEGIN {
     $::bool = 1;
   }
 };
-use 5.030; # avoid buggy floating-point assignments
+#use 5.030; # avoid buggy floating-point assignments
 
 use overload
 '+'    => \&oload_add,
@@ -358,7 +358,7 @@ sub oload_stringify {
   elsif(_isnan($val)) {
      $ret = 'nan';
   }
-  elsif ($val < 1e+21 && $val == int($val)) {
+  elsif (abs($val) < 1e+21 && $val == int($val)) {
     # sprintf("%.21g", $val) doesn't always provide the desired format.
     # (Such occurrences are rare - probably an old libc.) See:
     # https://www.cpantesters.org/cpan/report/ef98593c-e29b-11ee-aded-31476e8775ea
@@ -518,9 +518,11 @@ sub oload_rshift {
   }
 
   if($type eq 'uint32' || ($type eq 'sint32' && $val < 0)) { # Highest order bit is set
-    my $ior = 0xffffffff ^ ((1 << (32 - $shift)) - 1);
-    my $val = unpack('l', pack 'L', $val) >> $shift;
-    $val |= $ior;
+    if($shift) {
+      my $ior = 0xffffffff ^ ((1 << (32 - $shift)) - 1);
+      $val = unpack('l', pack 'L', $val) >> $shift;
+      $val |= $ior;
+    }
     return Math::JS->new(unpack 'l', pack 'L', $val);
   }
 
