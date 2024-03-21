@@ -62,7 +62,7 @@ cmp_ok("$js", 'eq', '4294967297', "4294967297 displays as expected");
 # The next 4 tests always use sprintf() - which can (rarely)
 # produce the wrong format - though the represented value will
 # be correct.
-# Math::Ryu is never used with these 2 tests.
+# Math::Ryu is never used with these 4 tests.
 # We TODO these tests on systems where they will fail.
 
 TODO: {
@@ -83,9 +83,9 @@ TODO: {
   cmp_ok("$js", 'eq', '-9' . '0' x 20, "-9e+20 displays as expected");
 }
 
-# Having possibly avoided the last 2 tests, we can at least check
+# Having possibly avoided the last 4 tests, we can at least check
 # that $js == the expected value:
-my $expected = $ryu ? '-9' . '0' x 20 : '9e+20';
+my $expected = $ryu ? '-9' . '0' x 20 : '-9e+20';
 
 cmp_ok("$js", '==', $expected, "strings are evaluated as expected");
 $js = Math::JS->new(1e19);
