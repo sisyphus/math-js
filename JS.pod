@@ -11,7 +11,7 @@ Assign numeric values to Math::JS objects, and perform arithmetic
 operations on those values according to the rules that JavaScript
 uses.
 
-This module was prompted by https://www.perlmonks.org/?node=11155911
+This module was prompted by L<https://www.perlmonks.org/?node=11155911>
 and the unexpected arithmetical behaviour revealed therein.
 JavaScript uses the C 'double' as its floating point data type, and
 therefore the building of Math::JS is restricted to perls that have
