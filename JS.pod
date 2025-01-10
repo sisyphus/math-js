@@ -38,9 +38,9 @@ Exports no functions by default, and only one function upon request:
   $rop = urs($op, $shift);
 
 Emulate JavaScript's '>>>' operator.
-  An usnsigned 32-bit rightshift of $shift places is performed on the
-  value held by the Math::JS object $op. $rop is a created Math::JS
-  object that holds, as its value, the result of that right shift.
+An unsigned 32-bit rightshift of $shift places is performed on the
+value held by the Math::JS object $op. $rop is a created Math::JS
+object that holds, as its value, the result of that right shift.
 
 Overloading of the '+', '-', '*', '/', '%', '**', '++', '--', '>=',
 '<=', '==', '!=', '>', '<', '<=>', '""', '+=', '-=', '*=', '/=', '%=',
